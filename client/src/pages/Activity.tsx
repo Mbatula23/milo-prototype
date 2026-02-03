@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import AppLayout from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,287 +17,256 @@ import {
   CheckCircle2,
   Download,
   Flag,
+  History,
   Search,
   User,
   XCircle,
 } from "lucide-react";
 
-// Mock data
+/*
+ * Activity Page - Complete audit trail
+ * 
+ * Design: Enterprise audit log with filtering
+ * Every action is logged with user/system attribution
+ */
+
+// Mock activity data
 const activityLog = [
   {
     id: "1",
-    time: "10:23 AM",
+    time: "15:23",
+    date: "Today",
     user: "Sarah Chen",
     userType: "human" as const,
-    worker: "Three-Way Matching",
+    agent: "PO Matching",
     action: "approved" as const,
-    title: "Invoice #4521 - £2,340",
+    title: "INV-4521 approved",
+    detail: "£2,340 - Baby Mori / Jellycat",
     note: "Confirmed with supplier via email",
   },
   {
     id: "2",
-    time: "10:15 AM",
+    time: "15:15",
+    date: "Today",
     user: "System",
     userType: "system" as const,
-    worker: "Three-Way Matching",
+    agent: "PO Matching",
     action: "flagged" as const,
-    title: "Invoice #4521 - Quantity mismatch detected",
-    details: "Confidence: 87% | Assigned to: Sarah Chen",
+    title: "INV-4521 flagged for review",
+    detail: "Quantity mismatch detected (+20 units)",
   },
   {
     id: "3",
-    time: "09:45 AM",
+    time: "14:45",
+    date: "Today",
     user: "System",
     userType: "system" as const,
-    worker: "EU Regulatory Monitor",
+    agent: "Regulatory Monitor",
     action: "completed" as const,
-    title: "Daily scan - 0 new regulatory items",
+    title: "Daily scan completed",
+    detail: "0 new regulatory items found",
   },
   {
     id: "4",
-    time: "09:30 AM",
+    time: "14:30",
+    date: "Today",
     user: "James Wong",
     userType: "human" as const,
-    worker: "Three-Way Matching",
+    agent: "PO Matching",
     action: "escalated" as const,
-    title: "Invoice #4518 - Escalated to CFO",
+    title: "INV-4518 escalated to CFO",
+    detail: "£12,500 - Bloom & Wild",
     note: "Value exceeds my approval limit",
   },
   {
     id: "5",
-    time: "09:15 AM",
+    time: "14:15",
+    date: "Today",
     user: "System",
     userType: "system" as const,
-    worker: "Three-Way Matching",
+    agent: "PO Matching",
     action: "auto-approved" as const,
-    title: "Invoice #4517 - Auto-approved (exact match)",
+    title: "INV-4517 auto-approved",
+    detail: "£456 - Exact match",
   },
   {
     id: "6",
-    time: "09:00 AM",
+    time: "09:00",
+    date: "Today",
     user: "System",
     userType: "system" as const,
-    worker: "Three-Way Matching",
+    agent: "PO Matching",
     action: "processed" as const,
-    title: "Batch processing started - 15 invoices queued",
+    title: "Batch processing started",
+    detail: "15 invoices queued",
   },
   {
     id: "7",
-    time: "08:45 AM",
+    time: "17:45",
+    date: "Yesterday",
     user: "Sarah Chen",
     userType: "human" as const,
-    worker: "Three-Way Matching",
+    agent: "PO Matching",
     action: "rejected" as const,
-    title: "Invoice #4512 - Duplicate invoice",
+    title: "INV-4512 rejected",
+    detail: "Duplicate invoice",
     note: "Already processed on 01/28",
-  },
-  {
-    id: "8",
-    time: "Yesterday",
-    user: "System",
-    userType: "system" as const,
-    worker: "Month-End Accruals",
-    action: "completed" as const,
-    title: "January accruals calculated - 47 journal entries",
-  },
-  {
-    id: "9",
-    time: "Yesterday",
-    user: "Finance Team",
-    userType: "human" as const,
-    worker: "Month-End Accruals",
-    action: "approved" as const,
-    title: "January accruals batch approved",
-    note: "Reviewed by CFO",
   },
 ];
 
-const actionConfig = {
-  approved: {
-    icon: CheckCircle2,
-    color: "text-success",
-    bgColor: "bg-success/10",
-    label: "Approved",
-  },
-  "auto-approved": {
-    icon: CheckCircle2,
-    color: "text-success",
-    bgColor: "bg-success/10",
-    label: "Auto-approved",
-  },
-  rejected: {
-    icon: XCircle,
-    color: "text-destructive",
-    bgColor: "bg-destructive/10",
-    label: "Rejected",
-  },
-  flagged: {
-    icon: Flag,
-    color: "text-warning",
-    bgColor: "bg-warning/10",
-    label: "Flagged",
-  },
-  escalated: {
-    icon: ArrowUpRight,
-    color: "text-escalated",
-    bgColor: "bg-escalated/10",
-    label: "Escalated",
-  },
-  completed: {
-    icon: CheckCircle2,
-    color: "text-primary",
-    bgColor: "bg-primary/10",
-    label: "Completed",
-  },
-  processed: {
-    icon: Bot,
-    color: "text-muted-foreground",
-    bgColor: "bg-muted",
-    label: "Processed",
-  },
+const actionConfig: Record<string, { icon: any; color: string; label: string }> = {
+  approved: { icon: CheckCircle2, color: "text-success", label: "Approved" },
+  "auto-approved": { icon: CheckCircle2, color: "text-success", label: "Auto-approved" },
+  rejected: { icon: XCircle, color: "text-error", label: "Rejected" },
+  flagged: { icon: Flag, color: "text-warning", label: "Flagged" },
+  escalated: { icon: ArrowUpRight, color: "text-purple-400", label: "Escalated" },
+  completed: { icon: CheckCircle2, color: "text-info", label: "Completed" },
+  processed: { icon: Bot, color: "text-muted-foreground", label: "Processed" },
 };
 
-function ActivityRow({ item }: { item: (typeof activityLog)[0] }) {
-  const config = actionConfig[item.action];
+function ActivityRow({ item, showDate }: { item: (typeof activityLog)[0]; showDate: boolean }) {
+  const config = actionConfig[item.action] || actionConfig.processed;
   const Icon = config.icon;
 
   return (
-    <div className="flex items-start gap-4 py-4 border-b border-border last:border-0">
-      {/* Time */}
-      <div className="w-20 shrink-0">
-        <span className="text-xs font-mono text-muted-foreground">
-          {item.time}
-        </span>
-      </div>
-
-      {/* Icon */}
-      <div
-        className={cn(
-          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-          config.bgColor
-        )}
-      >
-        <Icon className={cn("w-4 h-4", config.color)} />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="flex items-center gap-1.5">
-            {item.userType === "human" ? (
-              <User className="w-3 h-3 text-muted-foreground" />
-            ) : (
-              <Bot className="w-3 h-3 text-muted-foreground" />
-            )}
-            <span className="text-sm font-medium">{item.user}</span>
-          </div>
-          <span className="text-muted-foreground">•</span>
-          <span className="text-sm text-muted-foreground">{item.worker}</span>
+    <>
+      {showDate && (
+        <div className="py-2 px-4 bg-muted/30 text-xs font-medium text-muted-foreground">
+          {item.date}
         </div>
-        <p className="text-sm text-foreground">{item.title}</p>
-        {"details" in item && (
-          <p className="text-xs text-muted-foreground mt-1">{item.details}</p>
-        )}
-        {"note" in item && (
-          <p className="text-xs text-muted-foreground mt-1 italic">
-            Note: "{item.note}"
-          </p>
-        )}
-      </div>
+      )}
+      <div className="flex items-start gap-4 py-3 px-4 hover:bg-muted/20 transition-colors">
+        {/* Time */}
+        <div className="w-12 shrink-0">
+          <span className="text-xs font-mono text-muted-foreground">{item.time}</span>
+        </div>
 
-      {/* Action badge */}
-      <Badge
-        variant="outline"
-        className={cn("shrink-0 text-xs", config.color)}
-      >
-        {config.label}
-      </Badge>
-    </div>
+        {/* Icon */}
+        <div
+          className={cn(
+            "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
+            item.action === "approved" || item.action === "auto-approved"
+              ? "bg-success/10"
+              : item.action === "rejected"
+              ? "bg-error/10"
+              : item.action === "flagged"
+              ? "bg-warning/10"
+              : item.action === "escalated"
+              ? "bg-purple-500/10"
+              : "bg-muted"
+          )}
+        >
+          <Icon className={cn("w-3.5 h-3.5", config.color)} />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <div className="flex items-center gap-1.5">
+              {item.userType === "human" ? (
+                <User className="w-3 h-3 text-muted-foreground" />
+              ) : (
+                <Bot className="w-3 h-3 text-muted-foreground" />
+              )}
+              <span className="text-sm font-medium">{item.user}</span>
+            </div>
+            <span className="text-muted-foreground text-xs">•</span>
+            <span className="text-xs text-muted-foreground">{item.agent}</span>
+          </div>
+          <p className="text-sm">{item.title}</p>
+          <p className="text-xs text-muted-foreground">{item.detail}</p>
+          {"note" in item && item.note && (
+            <p className="text-xs text-muted-foreground mt-1 italic">"{item.note}"</p>
+          )}
+        </div>
+
+        {/* Action badge */}
+        <Badge variant="outline" className={cn("shrink-0 text-[10px]", config.color)}>
+          {config.label}
+        </Badge>
+      </div>
+    </>
   );
 }
 
 export default function Activity() {
+  // Track which dates we've shown
+  let lastDate = "";
+
   return (
-    <DashboardLayout>
-      <div className="p-8">
+    <AppLayout>
+      <div className="h-full flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Activity</h1>
-            <p className="text-muted-foreground mt-1">
-              Complete audit trail of all actions across your workers.
-            </p>
+        <div className="p-4 border-b border-border shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <History className="w-5 h-5 text-primary" />
+              <h1 className="text-lg font-semibold">Activity</h1>
+            </div>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
           </div>
-          <Button variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Export CSV
-          </Button>
+
+          {/* Filters */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Search..." className="pl-9 bg-muted/50 border-0" />
+            </div>
+            <Select defaultValue="all-agents">
+              <SelectTrigger className="w-40 bg-muted/50 border-0">
+                <SelectValue placeholder="All Agents" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-agents">All Agents</SelectItem>
+                <SelectItem value="po-matching">PO Matching</SelectItem>
+                <SelectItem value="regulatory">Regulatory Monitor</SelectItem>
+                <SelectItem value="rebates">Rebates Calculator</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="all-users">
+              <SelectTrigger className="w-40 bg-muted/50 border-0">
+                <SelectValue placeholder="All Users" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all-users">All Users</SelectItem>
+                <SelectItem value="sarah">Sarah Chen</SelectItem>
+                <SelectItem value="james">James Wong</SelectItem>
+                <SelectItem value="system">System</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="today">
+              <SelectTrigger className="w-32 bg-muted/50 border-0">
+                <SelectValue placeholder="Date" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">Today</SelectItem>
+                <SelectItem value="yesterday">Yesterday</SelectItem>
+                <SelectItem value="week">This week</SelectItem>
+                <SelectItem value="month">This month</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Search activity..." className="pl-9" />
-          </div>
-          <Select defaultValue="all-workers">
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="All Workers" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-workers">All Workers</SelectItem>
-              <SelectItem value="three-way">Three-Way Matching</SelectItem>
-              <SelectItem value="eu-monitor">EU Regulatory Monitor</SelectItem>
-              <SelectItem value="month-end">Month-End Accruals</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select defaultValue="all-users">
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="All Users" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all-users">All Users</SelectItem>
-              <SelectItem value="sarah">Sarah Chen</SelectItem>
-              <SelectItem value="james">James Wong</SelectItem>
-              <SelectItem value="system">System</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select defaultValue="today">
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Date" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-              <SelectItem value="week">This week</SelectItem>
-              <SelectItem value="month">This month</SelectItem>
-              <SelectItem value="custom">Custom range</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Activity list */}
+        <div className="flex-1 overflow-auto">
+          <Card className="m-4 border-border/50">
+            <CardContent className="p-0">
+              {activityLog.map((item) => {
+                const showDate = item.date !== lastDate;
+                lastDate = item.date;
+                return <ActivityRow key={item.id} item={item} showDate={showDate} />;
+              })}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Activity table */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="px-4 py-3 border-b border-border bg-muted/30">
-              <div className="flex items-center gap-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                <div className="w-20">Time</div>
-                <div className="w-8" />
-                <div className="flex-1">Details</div>
-                <div className="w-24 text-right">Action</div>
-              </div>
-            </div>
-            <div className="px-4">
-              {activityLog.map((item) => (
-                <ActivityRow key={item.id} item={item} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pagination hint */}
-        <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-          <span>Showing 9 of 1,247 entries</span>
+        {/* Footer */}
+        <div className="p-4 border-t border-border shrink-0 flex items-center justify-between text-sm text-muted-foreground">
+          <span>Showing 7 of 1,247 entries</span>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" disabled>
               Previous
@@ -308,6 +277,6 @@ export default function Activity() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </AppLayout>
   );
 }
