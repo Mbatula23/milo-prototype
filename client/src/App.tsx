@@ -8,6 +8,8 @@ import Agents from "./pages/Agents";
 import AgentDetail from "./pages/AgentDetail";
 import Inbox from "./pages/Inbox";
 import Activity from "./pages/Activity";
+import Settings from "./pages/Settings";
+import Members from "./pages/Members";
 
 function Router() {
   return (
@@ -17,6 +19,8 @@ function Router() {
       <Route path="/agents/:id" component={AgentDetail} />
       <Route path="/inbox" component={Inbox} />
       <Route path="/activity" component={Activity} />
+      <Route path="/settings" component={Settings} />
+      <Route path="/members" component={Members} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

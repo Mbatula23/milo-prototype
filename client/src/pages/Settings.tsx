@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,8 +13,8 @@ export default function Settings() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-8">
+    <AppLayout>
+      <div className="h-full overflow-auto p-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
@@ -44,7 +44,7 @@ export default function Settings() {
                   <Label htmlFor="workspace-name">Workspace Name</Label>
                   <Input
                     id="workspace-name"
-                    defaultValue="Baby Mori Finance"
+                    defaultValue="Bloom & Wild Finance"
                     className="max-w-md"
                   />
                 </div>
@@ -79,7 +79,7 @@ export default function Settings() {
                     <div>
                       <p className="font-medium">Gmail</p>
                       <p className="text-sm text-muted-foreground">
-                        finance@babymori.com
+                        finance@bloomandwild.com
                       </p>
                     </div>
                   </div>
@@ -193,6 +193,6 @@ export default function Settings() {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </AppLayout>
   );
 }
