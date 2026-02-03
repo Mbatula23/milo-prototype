@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Bot, History, Inbox, Settings, Users } from "lucide-react";
+import { Bot, History, Inbox, Settings, Users, ChevronDown } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 /*
@@ -93,6 +93,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </nav>
+
+        {/* User Profile Section */}
+        <div className="p-3 border-t border-sidebar-border">
+          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <span className="text-xs font-medium text-blue-700">SC</span>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-foreground">Sarah Chen</p>
+              <p className="text-xs text-muted-foreground">Finance Ops</p>
+            </div>
+            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}
