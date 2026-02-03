@@ -9,14 +9,17 @@ import {
   Bot,
   CheckCircle2,
   Clock,
+  FileCheck,
   FileText,
   Pause,
   Play,
   Plus,
   Search,
   Send,
+  Shield,
   Sparkles,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
@@ -26,7 +29,16 @@ import { Link } from "wouter";
  * 
  * Design: Split view with agent list on left, chat creation on right
  * Inspired by Twin.so's conversational approach + existing Milo structure
+ * 
+ * Note: Using professional Lucide icons instead of emojis for enterprise feel
  */
+
+// Icon mapping for agents - professional icons instead of emojis
+const agentIcons: Record<string, React.ReactNode> = {
+  "po-matching": <FileCheck className="w-5 h-5 text-blue-600" />,
+  "regulatory": <Shield className="w-5 h-5 text-emerald-600" />,
+  "rebates": <Wallet className="w-5 h-5 text-amber-600" />,
+};
 
 // Mock agents data
 const agents = [
@@ -35,7 +47,7 @@ const agents = [
     name: "PO Matching",
     description: "Three-way matching: PO → Packing List → Invoice",
     status: "active" as const,
-    icon: "📦",
+    iconKey: "po-matching",
     lastRun: "2 min ago",
     stats: { processed: 1247, flagged: 62, successRate: 95.0 },
   },
@@ -44,7 +56,7 @@ const agents = [
     name: "Regulatory Monitor",
     description: "EU regulatory changes affecting packaging & labeling",
     status: "active" as const,
-    icon: "📋",
+    iconKey: "regulatory",
     lastRun: "1 hour ago",
     stats: { processed: 89, flagged: 3, successRate: 100 },
   },
@@ -53,7 +65,7 @@ const agents = [
     name: "Rebates Calculator",
     description: "Supplier rebate tracking and reconciliation",
     status: "paused" as const,
-    icon: "💰",
+    iconKey: "rebates",
     lastRun: "2 days ago",
     stats: { processed: 456, flagged: 12, successRate: 97.4 },
   },
@@ -77,8 +89,8 @@ function AgentCard({ agent }: { agent: (typeof agents)[0] }) {
     <Link href={`/agents/${agent.id}`}>
       <Card className="p-4 agent-card cursor-pointer border-border/50">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-xl shrink-0">
-            {agent.icon}
+          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            {agentIcons[agent.iconKey] || <Bot className="w-5 h-5 text-muted-foreground" />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
