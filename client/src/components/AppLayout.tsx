@@ -1,6 +1,15 @@
 import { cn } from "@/lib/utils";
-import { Bot, History, Inbox, Settings, Users, ChevronDown } from "lucide-react";
+import { Bot, History, Inbox, Settings, Users, ChevronDown, LogOut, User, Bell } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { toast } from "sonner";
 
 /*
  * AppLayout - Main application shell
@@ -94,18 +103,42 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
 
-        {/* User Profile Section */}
+        {/* User Profile Section with Dropdown - matching v1 implementation */}
         <div className="p-3 border-t border-sidebar-border">
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-xs font-medium text-blue-700">SC</span>
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-medium text-foreground">Sarah Chen</p>
-              <p className="text-xs text-muted-foreground">Finance Ops</p>
-            </div>
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted transition-colors">
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-medium">
+                    SC
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-foreground">Sarah Chen</p>
+                  <p className="text-xs text-muted-foreground">Finance Ops</p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => toast.info("Profile settings coming soon")}>
+                <User className="w-4 h-4 mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info("Notification preferences coming soon")}>
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => toast.info("Sign out coming soon")}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 
