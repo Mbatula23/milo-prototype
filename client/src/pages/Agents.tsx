@@ -5,12 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import {
-  ArrowRight,
   Bot,
-  CheckCircle2,
   Clock,
   FileCheck,
-  FileText,
   Pause,
   Play,
   Plus,
@@ -20,6 +17,9 @@ import {
   Sparkles,
   TrendingUp,
   Wallet,
+  Calculator,
+  FileText,
+  BarChart3,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
@@ -28,48 +28,103 @@ import { Link } from "wouter";
  * Agents Page - Main agent list with chat-first creation
  * 
  * Design: Split view with agent list on left, chat creation on right
- * Inspired by Twin.so's conversational approach + existing Milo structure
+ * Agents grouped by category: Finance, Compliance, Operations
  * 
  * Note: Using professional Lucide icons instead of emojis for enterprise feel
  */
 
-// Icon mapping for agents - professional icons instead of emojis
+// Icon mapping for agents - professional icons
 const agentIcons: Record<string, React.ReactNode> = {
   "po-matching": <FileCheck className="w-5 h-5 text-blue-600" />,
   "regulatory": <Shield className="w-5 h-5 text-emerald-600" />,
   "rebates": <Wallet className="w-5 h-5 text-amber-600" />,
+  "invoice-processing": <FileText className="w-5 h-5 text-blue-600" />,
+  "expense-audit": <Calculator className="w-5 h-5 text-purple-600" />,
+  "spend-analytics": <BarChart3 className="w-5 h-5 text-indigo-600" />,
 };
 
-// Mock agents data
-const agents = [
+// Category definitions
+type Category = "finance" | "compliance" | "operations";
+
+const categoryLabels: Record<Category, string> = {
+  finance: "Finance",
+  compliance: "Compliance",
+  operations: "Operations",
+};
+
+const categoryColors: Record<Category, string> = {
+  finance: "text-blue-600",
+  compliance: "text-emerald-600",
+  operations: "text-amber-600",
+};
+
+// Agent type
+interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  status: "active" | "paused";
+  iconKey: string;
+  category: Category;
+  lastRun: string;
+  stats: { processed: number; flagged: number; successRate: number };
+}
+
+// Mock agents data grouped by category
+const agents: Agent[] = [
+  // Finance
   {
     id: "1",
     name: "PO Matching",
     description: "Three-way matching: PO → Packing List → Invoice",
-    status: "active" as const,
+    status: "active",
     iconKey: "po-matching",
+    category: "finance",
     lastRun: "2 min ago",
     stats: { processed: 1247, flagged: 62, successRate: 95.0 },
-  },
-  {
-    id: "2",
-    name: "Regulatory Monitor",
-    description: "EU regulatory changes affecting packaging & labeling",
-    status: "active" as const,
-    iconKey: "regulatory",
-    lastRun: "1 hour ago",
-    stats: { processed: 89, flagged: 3, successRate: 100 },
   },
   {
     id: "3",
     name: "Rebates Calculator",
     description: "Supplier rebate tracking and reconciliation",
-    status: "paused" as const,
+    status: "paused",
     iconKey: "rebates",
+    category: "finance",
     lastRun: "2 days ago",
     stats: { processed: 456, flagged: 12, successRate: 97.4 },
   },
+  // Compliance
+  {
+    id: "2",
+    name: "Regulatory Monitor",
+    description: "EU regulatory changes affecting packaging & labeling",
+    status: "active",
+    iconKey: "regulatory",
+    category: "compliance",
+    lastRun: "1 hour ago",
+    stats: { processed: 89, flagged: 3, successRate: 100 },
+  },
+  // Operations
+  {
+    id: "4",
+    name: "Spend Analytics",
+    description: "Monthly spend categorization and anomaly detection",
+    status: "active",
+    iconKey: "spend-analytics",
+    category: "operations",
+    lastRun: "4 hours ago",
+    stats: { processed: 2341, flagged: 18, successRate: 99.2 },
+  },
 ];
+
+// Group agents by category
+const agentsByCategory = agents.reduce((acc, agent) => {
+  if (!acc[agent.category]) {
+    acc[agent.category] = [];
+  }
+  acc[agent.category].push(agent);
+  return acc;
+}, {} as Record<Category, Agent[]>);
 
 // Chat messages for creation flow
 interface ChatMessage {
@@ -84,7 +139,7 @@ const initialMessages: ChatMessage[] = [
   },
 ];
 
-function AgentCard({ agent }: { agent: (typeof agents)[0] }) {
+function AgentCard({ agent }: { agent: Agent }) {
   return (
     <Link href={`/agents/${agent.id}`}>
       <Card className="p-4 agent-card cursor-pointer border-border/50">
@@ -131,6 +186,26 @@ function AgentCard({ agent }: { agent: (typeof agents)[0] }) {
   );
 }
 
+function CategorySection({ category, agents }: { category: Category; agents: Agent[] }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <span className={cn("text-xs font-semibold uppercase tracking-wider", categoryColors[category])}>
+          {categoryLabels[category]}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          ({agents.length} {agents.length === 1 ? 'agent' : 'agents'})
+        </span>
+      </div>
+      <div className="space-y-2">
+        {agents.map((agent) => (
+          <AgentCard key={agent.id} agent={agent} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Agents() {
   const [showChat, setShowChat] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
@@ -156,6 +231,9 @@ export default function Agents() {
       setIsTyping(false);
     }, 1500);
   };
+
+  // Order categories
+  const categoryOrder: Category[] = ["finance", "compliance", "operations"];
 
   return (
     <AppLayout>
@@ -190,11 +268,19 @@ export default function Agents() {
             </div>
           </div>
 
-          {/* Agent list */}
-          <div className="flex-1 overflow-auto p-4 space-y-2">
-            {agents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
-            ))}
+          {/* Agent list grouped by category */}
+          <div className="flex-1 overflow-auto p-4">
+            {categoryOrder.map((category) => {
+              const categoryAgents = agentsByCategory[category];
+              if (!categoryAgents || categoryAgents.length === 0) return null;
+              return (
+                <CategorySection
+                  key={category}
+                  category={category}
+                  agents={categoryAgents}
+                />
+              );
+            })}
           </div>
         </div>
 
