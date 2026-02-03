@@ -2,12 +2,12 @@ import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Plus, MoreHorizontal, Mail } from "lucide-react";
+import { Users, Plus, MoreHorizontal } from "lucide-react";
 
 /*
  * Members Page
  * 
- * Team member management with roles and permissions
+ * Team member management with roles, departments, and permissions
  */
 
 const members = [
@@ -16,6 +16,7 @@ const members = [
     name: "Sarah Chen",
     email: "sarah.chen@bloomandwild.com",
     role: "Admin",
+    department: "Finance Operations",
     avatar: "SC",
     status: "active",
     lastActive: "2 min ago",
@@ -25,6 +26,7 @@ const members = [
     name: "James Wong",
     email: "james.wong@bloomandwild.com",
     role: "Approver",
+    department: "Finance",
     avatar: "JW",
     status: "active",
     lastActive: "1 hour ago",
@@ -34,6 +36,7 @@ const members = [
     name: "Emma Thompson",
     email: "emma.thompson@bloomandwild.com",
     role: "Viewer",
+    department: "Legal",
     avatar: "ET",
     status: "active",
     lastActive: "3 hours ago",
@@ -43,6 +46,7 @@ const members = [
     name: "Michael Roberts",
     email: "michael.roberts@bloomandwild.com",
     role: "Approver",
+    department: "Procurement",
     avatar: "MR",
     status: "pending",
     lastActive: "Invited",
@@ -78,13 +82,24 @@ export default function Members() {
 
         {/* Members List */}
         <Card>
+          {/* Table Header */}
+          <div className="flex items-center px-4 py-3 border-b border-border text-sm font-medium text-muted-foreground">
+            <div className="flex-1">Member</div>
+            <div className="w-36">Department</div>
+            <div className="w-28">Last Active</div>
+            <div className="w-24">Role</div>
+            <div className="w-10"></div>
+          </div>
+          
+          {/* Table Body */}
           <div className="divide-y divide-border">
             {members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                className="flex items-center p-4 hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-center gap-4">
+                {/* Member Info */}
+                <div className="flex-1 flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <span className="text-sm font-medium text-primary">
                       {member.avatar}
@@ -102,13 +117,30 @@ export default function Members() {
                     <p className="text-sm text-muted-foreground">{member.email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                
+                {/* Department */}
+                <div className="w-36">
+                  <span className="text-sm text-muted-foreground">
+                    {member.department}
+                  </span>
+                </div>
+                
+                {/* Last Active */}
+                <div className="w-28">
                   <span className="text-sm text-muted-foreground">
                     {member.lastActive}
                   </span>
+                </div>
+                
+                {/* Role */}
+                <div className="w-24">
                   <Badge className={roleColors[member.role]} variant="secondary">
                     {member.role}
                   </Badge>
+                </div>
+                
+                {/* Actions */}
+                <div className="w-10">
                   <Button variant="ghost" size="icon">
                     <MoreHorizontal className="w-4 h-4" />
                   </Button>
