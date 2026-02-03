@@ -1,18 +1,23 @@
 import { cn } from "@/lib/utils";
-import { Bot, History, Inbox, Plus, Settings } from "lucide-react";
+import { Bot, History, Inbox, Settings, Users } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 /*
  * AppLayout - Main application shell
  * 
- * Design: Dark sidebar with minimal navigation
- * Inspired by existing Milo prototype's clean structure
+ * Design: v1-style sidebar with text labels (clearer navigation)
+ * Combined with v4 white theme and agent-centric flow
  */
 
-const navItems = [
-  { href: "/", icon: Bot, label: "Agents" },
-  { href: "/inbox", icon: Inbox, label: "Inbox", badge: 3 },
+const mainNavItems = [
+  { href: "/", icon: Bot, label: "Workers" },
+  { href: "/inbox", icon: Inbox, label: "Inbox", badge: 12 },
   { href: "/activity", icon: History, label: "Activity" },
+  { href: "/settings", icon: Settings, label: "Settings" },
+];
+
+const teamNavItems = [
+  { href: "/members", icon: Users, label: "Members" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -21,57 +26,77 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-16 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-4">
+      <aside className="w-56 bg-sidebar border-r border-sidebar-border flex flex-col">
         {/* Logo */}
-        <Link href="/">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-6">
-            <span className="text-lg font-bold text-primary">M</span>
+        <div className="p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
+            <span className="text-sm font-bold text-primary-foreground">M</span>
           </div>
-        </Link>
-
-        {/* Navigation */}
-        <nav className="flex-1 flex flex-col items-center gap-2">
-          {navItems.map((item) => {
-            const isActive = location === item.href || 
-              (item.href !== "/" && location.startsWith(item.href));
-            return (
-              <Link key={item.href} href={item.href}>
-                <button
-                  className={cn(
-                    "relative w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
-                    isActive
-                      ? "bg-primary/20 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                  title={item.label}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.badge && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-warning text-[10px] font-medium text-background flex items-center justify-center">
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom actions */}
-        <div className="flex flex-col items-center gap-2">
-          <Link href="/settings">
-            <button
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title="Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-          </Link>
+          <span className="font-semibold text-foreground">Milo</span>
         </div>
+
+        {/* Main Navigation */}
+        <nav className="flex-1 px-3 py-2">
+          <div className="space-y-1">
+            {mainNavItems.map((item) => {
+              const isActive = location === item.href || 
+                (item.href !== "/" && location.startsWith(item.href));
+              return (
+                <Link key={item.href} href={item.href}>
+                  <button
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Team Section */}
+          <div className="mt-8">
+            <div className="px-3 mb-2">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Team
+              </span>
+            </div>
+            <div className="space-y-1">
+              {teamNavItems.map((item) => {
+                const isActive = location === item.href;
+                return (
+                  <Link key={item.href} href={item.href}>
+                    <button
+                      className={cn(
+                        "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.label}</span>
+                    </button>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </nav>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden bg-background">
         {children}
       </main>
     </div>
