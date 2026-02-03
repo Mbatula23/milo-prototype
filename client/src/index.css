@@ -1,8 +1,7 @@
 /*
- * MILO V3 DESIGN SYSTEM
- * Theme: Milo white/light (matching platform.get-milo.com colors)
- * Layout: Sidebar navigation (better enterprise UX from v1/v2)
- * Features: Card-based content, "Ask Analyst" pattern, enterprise controls
+ * MILO V4 DESIGN SYSTEM
+ * Theme: v3 white/light colors (matching platform.get-milo.com)
+ * Flow: v2 agent-centric (chat-first creation, live data tables)
  */
 
 @import "tailwindcss";
@@ -48,11 +47,11 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   
-  /* Milo status colors */
-  --color-status-active: oklch(0.65 0.18 145);
-  --color-status-pending: oklch(0.75 0.15 85);
-  --color-status-error: oklch(0.6 0.22 25);
-  --color-status-escalated: oklch(0.55 0.18 290);
+  /* Status colors */
+  --color-success: oklch(0.65 0.18 145);
+  --color-warning: oklch(0.75 0.15 85);
+  --color-error: oklch(0.6 0.22 25);
+  --color-info: oklch(0.6 0.15 250);
 }
 
 :root {
@@ -153,5 +152,32 @@
       padding-right: 2rem;
       max-width: 1400px;
     }
+  }
+  
+  /* Agent card hover effect */
+  .agent-card {
+    @apply transition-all duration-200;
+  }
+  .agent-card:hover {
+    @apply border-primary/30 shadow-sm;
+  }
+  
+  /* Status badges */
+  .status-success {
+    @apply text-[var(--color-success)] border-[var(--color-success)]/30 bg-[var(--color-success)]/10;
+  }
+  .status-warning {
+    @apply text-[var(--color-warning)] border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10;
+  }
+  .status-error {
+    @apply text-[var(--color-error)] border-[var(--color-error)]/30 bg-[var(--color-error)]/10;
+  }
+  
+  /* Chat message styles */
+  .chat-message-user {
+    @apply bg-primary text-primary-foreground rounded-2xl rounded-br-md;
+  }
+  .chat-message-ai {
+    @apply bg-muted rounded-2xl rounded-bl-md;
   }
 }
