@@ -1,21 +1,14 @@
+/*
+ * MILO V3 DESIGN SYSTEM
+ * Theme: Milo white/light (matching platform.get-milo.com colors)
+ * Layout: Sidebar navigation (better enterprise UX from v1/v2)
+ * Features: Card-based content, "Ask Analyst" pattern, enterprise controls
+ */
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-
-/*
- * MILO DESIGN SYSTEM v2 - Hybrid Approach
- * 
- * Dark theme inspired by existing Milo prototype
- * Chat-first interface patterns from Twin.so
- * Enterprise approval/audit features
- * 
- * Color Philosophy:
- * - Deep charcoal backgrounds for focus
- * - Subtle borders for structure without noise
- * - Accent colors reserved for status and actions
- * - High contrast text for readability
- */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -55,67 +48,61 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   
-  /* Status colors */
-  --color-success: var(--success);
-  --color-warning: var(--warning);
-  --color-error: var(--error);
-  --color-info: var(--info);
+  /* Milo status colors */
+  --color-status-active: oklch(0.65 0.18 145);
+  --color-status-pending: oklch(0.75 0.15 85);
+  --color-status-error: oklch(0.6 0.22 25);
+  --color-status-escalated: oklch(0.55 0.18 290);
 }
 
 :root {
   --radius: 0.5rem;
   
-  /* Dark theme as default - matching existing Milo */
-  --background: oklch(0.13 0.005 260);
-  --foreground: oklch(0.95 0.005 260);
+  /* White/Light theme matching actual Milo */
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.15 0.01 250);
   
-  --card: oklch(0.16 0.005 260);
-  --card-foreground: oklch(0.95 0.005 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 250);
   
-  --popover: oklch(0.18 0.005 260);
-  --popover-foreground: oklch(0.95 0.005 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 250);
   
-  --primary: oklch(0.65 0.2 250);
+  --primary: oklch(0.35 0.01 250);
   --primary-foreground: oklch(0.98 0 0);
   
-  --secondary: oklch(0.22 0.005 260);
-  --secondary-foreground: oklch(0.85 0.005 260);
+  --secondary: oklch(0.965 0.003 250);
+  --secondary-foreground: oklch(0.25 0.01 250);
   
-  --muted: oklch(0.20 0.005 260);
-  --muted-foreground: oklch(0.55 0.01 260);
+  --muted: oklch(0.955 0.003 250);
+  --muted-foreground: oklch(0.45 0.01 250);
   
-  --accent: oklch(0.22 0.01 260);
-  --accent-foreground: oklch(0.95 0.005 260);
+  --accent: oklch(0.955 0.003 250);
+  --accent-foreground: oklch(0.15 0.01 250);
   
-  --destructive: oklch(0.60 0.2 25);
+  --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
   
-  --border: oklch(0.25 0.005 260);
-  --input: oklch(0.20 0.005 260);
-  --ring: oklch(0.65 0.2 250);
+  --border: oklch(0.915 0.003 250);
+  --input: oklch(0.915 0.003 250);
+  --ring: oklch(0.35 0.01 250);
   
-  /* Sidebar - slightly lighter for hierarchy */
-  --sidebar: oklch(0.15 0.005 260);
-  --sidebar-foreground: oklch(0.85 0.005 260);
-  --sidebar-primary: oklch(0.65 0.2 250);
+  /* Chart colors */
+  --chart-1: oklch(0.65 0.18 145);
+  --chart-2: oklch(0.55 0.15 250);
+  --chart-3: oklch(0.75 0.15 85);
+  --chart-4: oklch(0.55 0.18 290);
+  --chart-5: oklch(0.6 0.22 25);
+  
+  /* Sidebar - light gray */
+  --sidebar: oklch(0.975 0.002 250);
+  --sidebar-foreground: oklch(0.15 0.01 250);
+  --sidebar-primary: oklch(0.35 0.01 250);
   --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.20 0.01 260);
-  --sidebar-accent-foreground: oklch(0.95 0.005 260);
-  --sidebar-border: oklch(0.22 0.005 260);
-  --sidebar-ring: oklch(0.65 0.2 250);
-  
-  /* Status colors - enterprise signals */
-  --success: oklch(0.65 0.18 145);
-  --warning: oklch(0.75 0.15 75);
-  --error: oklch(0.60 0.2 25);
-  --info: oklch(0.65 0.15 230);
-  
-  /* Charts */
-  --chart-1: oklch(0.65 0.2 250);
-  --chart-2: oklch(0.65 0.18 145);
-  --chart-3: oklch(0.75 0.15 75);
-  --chart-4: oklch(0.60 0.2 25);
-  --chart-5: oklch(0.65 0.15 300);
+  --sidebar-accent: oklch(0.94 0.003 250);
+  --sidebar-accent-foreground: oklch(0.15 0.01 250);
+  --sidebar-border: oklch(0.915 0.003 250);
+  --sidebar-ring: oklch(0.35 0.01 250);
 }
 
 @layer base {
@@ -123,7 +110,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   button:not(:disabled),
@@ -164,95 +151,7 @@
     .container {
       padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px;
+      max-width: 1400px;
     }
   }
-  
-  /* Status badge utilities */
-  .status-success {
-    @apply bg-success/15 text-success border-success/30;
-  }
-  
-  .status-warning {
-    @apply bg-warning/15 text-warning border-warning/30;
-  }
-  
-  .status-error {
-    @apply bg-error/15 text-error border-error/30;
-  }
-  
-  .status-info {
-    @apply bg-info/15 text-info border-info/30;
-  }
-  
-  /* Chat message styles */
-  .chat-message-user {
-    @apply bg-primary/20 rounded-2xl rounded-br-sm;
-  }
-  
-  .chat-message-ai {
-    @apply bg-secondary rounded-2xl rounded-bl-sm;
-  }
-  
-  /* Data table styles */
-  .data-table {
-    @apply w-full text-sm;
-  }
-  
-  .data-table th {
-    @apply text-left text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 border-b border-border;
-  }
-  
-  .data-table td {
-    @apply py-3 px-4 border-b border-border/50;
-  }
-  
-  .data-table tr:hover td {
-    @apply bg-muted/30;
-  }
-  
-  /* Agent card hover effect */
-  .agent-card {
-    @apply transition-all duration-200 hover:bg-muted/50 hover:border-primary/30;
-  }
-  
-  /* Execution log styles */
-  .log-entry {
-    @apply font-mono text-xs leading-relaxed;
-  }
-  
-  .log-timestamp {
-    @apply text-muted-foreground;
-  }
-  
-  .log-success {
-    @apply text-success;
-  }
-  
-  .log-warning {
-    @apply text-warning;
-  }
-  
-  .log-error {
-    @apply text-error;
-  }
-}
-
-/* Custom scrollbar for dark theme */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: oklch(0.3 0.005 260);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.35 0.005 260);
 }
