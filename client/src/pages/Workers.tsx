@@ -244,14 +244,15 @@ export default function Workers() {
                 <Bot className="w-5 h-5 text-muted-foreground" />
                 <h1 className="text-lg font-semibold">Workers</h1>
               </div>
-              <Button
-                size="sm"
-                onClick={() => setShowChat(true)}
-                className="gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                New Worker
-              </Button>
+              <Link href="/workers/new">
+                <Button
+                  size="sm"
+                  className="gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Worker
+                </Button>
+              </Link>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
