@@ -19,7 +19,7 @@ import { toast } from "sonner";
  */
 
 const mainNavItems = [
-  { href: "/", icon: Bot, label: "Workers" },
+  { href: "/workers", icon: Bot, label: "Workers" },
   { href: "/inbox", icon: Inbox, label: "Inbox", badge: 12 },
   { href: "/activity", icon: History, label: "Activity" },
   { href: "/settings", icon: Settings, label: "Settings" },

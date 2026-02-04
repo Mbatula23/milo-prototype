@@ -1,273 +1,387 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import AppLayout from "@/components/AppLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   Bot,
-  FileText,
-  MoreHorizontal,
+  Clock,
+  FileCheck,
   Pause,
-  Pencil,
+  Play,
   Plus,
   Search,
+  Send,
   Shield,
+  Sparkles,
+  TrendingUp,
+  Wallet,
+  Calculator,
+  FileText,
+  BarChart3,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-// Mock data
-const workers = [
+/*
+ * Workers Page - Main worker list with chat-first creation
+ * 
+ * Design: Split view with worker list on left, chat creation on right
+ * Workers grouped by category: Finance, Compliance, Operations
+ * 
+ * Note: Using professional Lucide icons with neutral/muted colors for enterprise feel
+ */
+
+// Icon mapping for workers - professional icons with muted colors
+const workerIcons: Record<string, React.ReactNode> = {
+  "po-matching": <FileCheck className="w-5 h-5 text-muted-foreground" />,
+  "regulatory": <Shield className="w-5 h-5 text-muted-foreground" />,
+  "rebates": <Wallet className="w-5 h-5 text-muted-foreground" />,
+  "invoice-processing": <FileText className="w-5 h-5 text-muted-foreground" />,
+  "expense-audit": <Calculator className="w-5 h-5 text-muted-foreground" />,
+  "spend-analytics": <BarChart3 className="w-5 h-5 text-muted-foreground" />,
+};
+
+// Category definitions
+type Category = "finance" | "compliance" | "operations";
+
+const categoryLabels: Record<Category, string> = {
+  finance: "Finance",
+  compliance: "Compliance",
+  operations: "Operations",
+};
+
+// Worker type
+interface Worker {
+  id: string;
+  name: string;
+  description: string;
+  status: "active" | "paused";
+  iconKey: string;
+  category: Category;
+  lastRun: string;
+  stats: { processed: number; flagged: number; successRate: number };
+}
+
+// Mock workers data grouped by category
+const workers: Worker[] = [
+  // Finance
   {
     id: "1",
-    name: "Three-Way Matching",
-    description: "PO → Packing List → Invoice reconciliation",
-    icon: "📦",
-    status: "active" as const,
-    owner: "Sarah Chen",
-    lastRun: "2h ago",
-    processed: 1247,
-    successRate: 94.2,
-  },
-  {
-    id: "2",
-    name: "EU Regulatory Monitor",
-    description: "Daily scan of regulatory sources for EU compliance",
-    icon: "📋",
-    status: "active" as const,
-    owner: "Legal Team",
-    lastRun: "6h ago",
-    alerts: 23,
-    p1Alerts: 3,
-    sources: 12,
+    name: "PO Matching",
+    description: "Three-way matching: PO → Packing List → Invoice",
+    status: "active",
+    iconKey: "po-matching",
+    category: "finance",
+    lastRun: "2 min ago",
+    stats: { processed: 1247, flagged: 62, successRate: 95.0 },
   },
   {
     id: "3",
-    name: "Month-End Accruals",
-    description: "Automated accrual calculations and journal entries",
-    icon: "💰",
-    status: "paused" as const,
-    owner: "Finance Team",
-    lastRun: "3 days ago",
-    processed: 156,
-    successRate: 98.1,
+    name: "Rebates Calculator",
+    description: "Supplier rebate tracking and reconciliation",
+    status: "paused",
+    iconKey: "rebates",
+    category: "finance",
+    lastRun: "2 days ago",
+    stats: { processed: 456, flagged: 12, successRate: 97.4 },
   },
+  // Compliance
+  {
+    id: "2",
+    name: "Regulatory Monitor",
+    description: "EU regulatory changes affecting packaging & labeling",
+    status: "active",
+    iconKey: "regulatory",
+    category: "compliance",
+    lastRun: "1 hour ago",
+    stats: { processed: 89, flagged: 3, successRate: 100 },
+  },
+  // Operations
   {
     id: "4",
-    name: "Supplier Onboarding",
-    description: "Collect and verify new supplier documentation",
-    icon: "🤝",
-    status: "active" as const,
-    owner: "Procurement",
-    lastRun: "1h ago",
-    processed: 34,
-    successRate: 91.2,
+    name: "Spend Analytics",
+    description: "Monthly spend categorization and anomaly detection",
+    status: "active",
+    iconKey: "spend-analytics",
+    category: "operations",
+    lastRun: "4 hours ago",
+    stats: { processed: 2341, flagged: 18, successRate: 99.2 },
   },
 ];
 
-function WorkerCard({
-  worker,
-}: {
-  worker: (typeof workers)[0];
-}) {
+// Group workers by category
+const workersByCategory = workers.reduce((acc, worker) => {
+  if (!acc[worker.category]) {
+    acc[worker.category] = [];
+  }
+  acc[worker.category].push(worker);
+  return acc;
+}, {} as Record<Category, Worker[]>);
+
+// Chat messages for creation flow
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const initialMessages: ChatMessage[] = [
+  {
+    role: "assistant",
+    content: "What would you like to automate? Describe the task in plain English.",
+  },
+];
+
+function WorkerCard({ worker }: { worker: Worker }) {
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg">
-              {worker.icon}
+    <Link href={`/workers/${worker.id}`}>
+      <Card className="p-4 worker-card cursor-pointer border-border/50 hover:border-border hover:shadow-sm transition-all">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+            {workerIcons[worker.iconKey] || <Bot className="w-5 h-5 text-muted-foreground" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-medium text-sm truncate">{worker.name}</h3>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-[10px] px-1.5",
+                  worker.status === "active"
+                    ? "status-success"
+                    : "text-muted-foreground border-muted-foreground/30"
+                )}
+              >
+                {worker.status === "active" ? (
+                  <><Play className="w-2.5 h-2.5 mr-1" /> Active</>
+                ) : (
+                  <><Pause className="w-2.5 h-2.5 mr-1" /> Paused</>
+                )}
+              </Badge>
             </div>
-            <div>
-              <h3 className="font-medium text-foreground">{worker.name}</h3>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {worker.description}
-              </p>
+            <p className="text-xs text-muted-foreground line-clamp-1">
+              {worker.description}
+            </p>
+            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {worker.lastRun}
+              </span>
+              <span className="flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                {worker.stats.successRate}%
+              </span>
             </div>
           </div>
-          <div
-            className={cn(
-              "px-2 py-1 rounded-full text-xs font-medium",
-              worker.status === "active"
-                ? "bg-success/10 text-success"
-                : "bg-muted text-muted-foreground"
-            )}
-          >
-            {worker.status === "active" ? "● Active" : "○ Paused"}
-          </div>
         </div>
+      </Card>
+    </Link>
+  );
+}
 
-        <div className="grid grid-cols-2 gap-4 mb-4 pt-4 border-t border-border">
-          <div>
-            <p className="text-xs text-muted-foreground">Owner</p>
-            <p className="text-sm font-medium mt-0.5">{worker.owner}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Last run</p>
-            <p className="text-sm font-medium mt-0.5">{worker.lastRun}</p>
-          </div>
-          {"processed" in worker && (
-            <>
-              <div>
-                <p className="text-xs text-muted-foreground">Processed</p>
-                <p className="text-sm font-medium font-mono mt-0.5">
-                  {worker.processed?.toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Success rate</p>
-                <p className="text-sm font-medium font-mono mt-0.5">
-                  {worker.successRate}%
-                </p>
-              </div>
-            </>
-          )}
-          {"alerts" in worker && (
-            <>
-              <div>
-                <p className="text-xs text-muted-foreground">Alerts</p>
-                <p className="text-sm font-medium font-mono mt-0.5">
-                  {worker.alerts}{" "}
-                  <span className="text-warning">({worker.p1Alerts} P1)</span>
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Sources</p>
-                <p className="text-sm font-medium font-mono mt-0.5">
-                  {worker.sources}
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 pt-4 border-t border-border">
-          <Link href={`/workers/${worker.id}`}>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <FileText className="w-3.5 h-3.5" />
-              View
-            </Button>
-          </Link>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Pencil className="w-3.5 h-3.5" />
-            Edit
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Pause className="w-3.5 h-3.5" />
-            {worker.status === "active" ? "Pause" : "Resume"}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="ml-auto">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Duplicate</DropdownMenuItem>
-              <DropdownMenuItem>View logs</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardContent>
-    </Card>
+function CategorySection({ category, workers }: { category: Category; workers: Worker[] }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3 px-1">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {categoryLabels[category]}
+        </span>
+        <span className="text-xs text-muted-foreground/60">
+          ({workers.length})
+        </span>
+      </div>
+      <div className="space-y-2">
+        {workers.map((worker) => (
+          <WorkerCard key={worker.id} worker={worker} />
+        ))}
+      </div>
+    </div>
   );
 }
 
 export default function Workers() {
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const [showChat, setShowChat] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
-  const filteredWorkers = workers.filter((worker) => {
-    if (filter === "active" && worker.status !== "active") return false;
-    if (filter === "paused" && worker.status !== "paused") return false;
-    if (
-      search &&
-      !worker.name.toLowerCase().includes(search.toLowerCase()) &&
-      !worker.description.toLowerCase().includes(search.toLowerCase())
-    ) {
-      return false;
-    }
-    return true;
-  });
+  const handleSend = () => {
+    if (!input.trim()) return;
+
+    const userMessage: ChatMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsTyping(true);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse: ChatMessage = {
+        role: "assistant",
+        content:
+          "I can help you set that up. Let me ask a few questions:\n\n1. Where do the invoices come from? (Email, upload, ERP)\n2. What ERP system do you use for PO data?\n3. What should happen when there's a mismatch?",
+      };
+      setMessages((prev) => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
+  // Order categories
+  const categoryOrder: Category[] = ["finance", "compliance", "operations"];
 
   return (
-    <DashboardLayout>
-      <div className="p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Workers</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your AI workers and automation workflows.
-            </p>
-          </div>
-          <Link href="/workers/new">
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              New Worker
-            </Button>
-          </Link>
-        </div>
-
-        {/* Filters */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search workers..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Tabs value={filter} onValueChange={setFilter}>
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="paused">Paused</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {/* Workers Grid */}
-        {filteredWorkers.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredWorkers.map((worker) => (
-              <WorkerCard key={worker.id} worker={worker} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-              <Bot className="w-8 h-8 text-muted-foreground" />
+    <AppLayout>
+      <div className="h-full flex">
+        {/* Left panel - Worker list */}
+        <div className={cn(
+          "border-r border-border flex flex-col transition-all duration-300",
+          showChat ? "w-80" : "flex-1 max-w-2xl"
+        )}>
+          {/* Header */}
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Bot className="w-5 h-5 text-muted-foreground" />
+                <h1 className="text-lg font-semibold">Workers</h1>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setShowChat(true)}
+                className="gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                New Worker
+              </Button>
             </div>
-            <h3 className="font-medium text-foreground mb-1">No workers found</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {search
-                ? "Try adjusting your search terms"
-                : "Create your first worker to get started"}
-            </p>
-            {!search && (
-              <Link href="/workers/new">
-                <Button className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  New Worker
-                </Button>
-              </Link>
-            )}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search workers..."
+                className="pl-9 bg-muted/50 border-0"
+              />
+            </div>
           </div>
-        )}
+
+          {/* Worker list grouped by category */}
+          <div className="flex-1 overflow-auto p-4">
+            {categoryOrder.map((category) => {
+              const categoryWorkers = workersByCategory[category];
+              if (!categoryWorkers || categoryWorkers.length === 0) return null;
+              return (
+                <CategorySection
+                  key={category}
+                  category={category}
+                  workers={categoryWorkers}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right panel - Chat or empty state */}
+        <div className="flex-1 flex flex-col">
+          {showChat ? (
+            <>
+              {/* Chat header */}
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-muted-foreground" />
+                  <h2 className="font-medium">Create New Worker</h2>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowChat(false);
+                    setMessages(initialMessages);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+
+              {/* Chat messages */}
+              <div className="flex-1 overflow-auto p-4 space-y-4">
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "flex gap-3",
+                      message.role === "user" && "justify-end"
+                    )}
+                  >
+                    {message.role === "assistant" && (
+                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <Sparkles className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        "max-w-[80%] px-4 py-3 text-sm whitespace-pre-line",
+                        message.role === "user"
+                          ? "chat-message-user"
+                          : "chat-message-ai"
+                      )}
+                    >
+                      {message.content}
+                    </div>
+                  </div>
+                ))}
+                {isTyping && (
+                  <div className="flex gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="chat-message-ai px-4 py-3">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" />
+                        <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0.1s]" />
+                        <span className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0.2s]" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat input */}
+              <div className="p-4 border-t border-border">
+                <div className="flex gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    placeholder="Describe what you want to automate..."
+                    className="flex-1 bg-muted/50 border-0"
+                  />
+                  <Button size="icon" onClick={handleSend} disabled={!input.trim()}>
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Empty state when no chat */
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center max-w-md">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Bot className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h2 className="text-xl font-semibold mb-2">
+                  Select a worker to view details
+                </h2>
+                <p className="text-muted-foreground text-sm mb-6">
+                  Or create a new worker by describing what you want to automate
+                  in plain English.
+                </p>
+                <Button onClick={() => setShowChat(true)} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create New Worker
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </DashboardLayout>
+    </AppLayout>
   );
 }
