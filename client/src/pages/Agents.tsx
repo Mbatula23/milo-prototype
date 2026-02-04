@@ -30,17 +30,17 @@ import { Link } from "wouter";
  * Design: Split view with agent list on left, chat creation on right
  * Agents grouped by category: Finance, Compliance, Operations
  * 
- * Note: Using professional Lucide icons instead of emojis for enterprise feel
+ * Note: Using professional Lucide icons with neutral/muted colors for enterprise feel
  */
 
-// Icon mapping for agents - professional icons
+// Icon mapping for agents - professional icons with muted colors
 const agentIcons: Record<string, React.ReactNode> = {
-  "po-matching": <FileCheck className="w-5 h-5 text-blue-600" />,
-  "regulatory": <Shield className="w-5 h-5 text-emerald-600" />,
-  "rebates": <Wallet className="w-5 h-5 text-amber-600" />,
-  "invoice-processing": <FileText className="w-5 h-5 text-blue-600" />,
-  "expense-audit": <Calculator className="w-5 h-5 text-purple-600" />,
-  "spend-analytics": <BarChart3 className="w-5 h-5 text-indigo-600" />,
+  "po-matching": <FileCheck className="w-5 h-5 text-muted-foreground" />,
+  "regulatory": <Shield className="w-5 h-5 text-muted-foreground" />,
+  "rebates": <Wallet className="w-5 h-5 text-muted-foreground" />,
+  "invoice-processing": <FileText className="w-5 h-5 text-muted-foreground" />,
+  "expense-audit": <Calculator className="w-5 h-5 text-muted-foreground" />,
+  "spend-analytics": <BarChart3 className="w-5 h-5 text-muted-foreground" />,
 };
 
 // Category definitions
@@ -50,12 +50,6 @@ const categoryLabels: Record<Category, string> = {
   finance: "Finance",
   compliance: "Compliance",
   operations: "Operations",
-};
-
-const categoryColors: Record<Category, string> = {
-  finance: "text-blue-600",
-  compliance: "text-emerald-600",
-  operations: "text-amber-600",
 };
 
 // Agent type
@@ -142,7 +136,7 @@ const initialMessages: ChatMessage[] = [
 function AgentCard({ agent }: { agent: Agent }) {
   return (
     <Link href={`/agents/${agent.id}`}>
-      <Card className="p-4 agent-card cursor-pointer border-border/50">
+      <Card className="p-4 agent-card cursor-pointer border-border/50 hover:border-border hover:shadow-sm transition-all">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
             {agentIcons[agent.iconKey] || <Bot className="w-5 h-5 text-muted-foreground" />}
@@ -190,11 +184,11 @@ function CategorySection({ category, agents }: { category: Category; agents: Age
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-3 px-1">
-        <span className={cn("text-xs font-semibold uppercase tracking-wider", categoryColors[category])}>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
           {categoryLabels[category]}
         </span>
-        <span className="text-xs text-muted-foreground">
-          ({agents.length} {agents.length === 1 ? 'agent' : 'agents'})
+        <span className="text-xs text-muted-foreground/60">
+          ({agents.length})
         </span>
       </div>
       <div className="space-y-2">
@@ -247,7 +241,7 @@ export default function Agents() {
           <div className="p-4 border-b border-border">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-primary" />
+                <Bot className="w-5 h-5 text-muted-foreground" />
                 <h1 className="text-lg font-semibold">Agents</h1>
               </div>
               <Button
@@ -291,7 +285,7 @@ export default function Agents() {
               {/* Chat header */}
               <div className="p-4 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
+                  <Sparkles className="w-5 h-5 text-muted-foreground" />
                   <h2 className="font-medium">Create New Agent</h2>
                 </div>
                 <Button
@@ -317,8 +311,8 @@ export default function Agents() {
                     )}
                   >
                     {message.role === "assistant" && (
-                      <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-                        <Sparkles className="w-4 h-4 text-primary" />
+                      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <Sparkles className="w-4 h-4 text-muted-foreground" />
                       </div>
                     )}
                     <div
@@ -335,8 +329,8 @@ export default function Agents() {
                 ))}
                 {isTyping && (
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-4 h-4 text-primary" />
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <div className="chat-message-ai px-4 py-3">
                       <div className="flex gap-1">
@@ -369,8 +363,8 @@ export default function Agents() {
             /* Empty state when no chat */
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center max-w-md">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Bot className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Bot className="w-8 h-8 text-muted-foreground" />
                 </div>
                 <h2 className="text-xl font-semibold mb-2">
                   Select an agent to view details
