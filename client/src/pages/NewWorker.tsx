@@ -166,6 +166,7 @@ function DescribeStep({
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState(mockConversation);
   const [isTyping, setIsTyping] = useState(false);
+  const [hasResponse, setHasResponse] = useState(false);
 
   const handleSend = () => {
     if (!message.trim()) return;
@@ -183,12 +184,32 @@ function DescribeStep({
         ...prev,
         {
           role: "assistant",
-          content: `Great! I understand you want to ${message.toLowerCase()}. I'll help you set up a worker for this. Let me configure the data sources and output format for you.`,
+          content: `Great! I understand you want to ${message.toLowerCase()}. I'll help you set up a worker for this. Click "Continue to Configure" below to set up your data sources and output format.`,
         },
       ]);
       setIsTyping(false);
-      setTimeout(onNext, 1500);
-    }, 2000);
+      setHasResponse(true);
+    }, 1500);
+  };
+
+  const handleTemplateClick = (template: typeof templates[0]) => {
+    setSelectedTemplate(template.id);
+    setConversation([
+      ...conversation,
+      { role: "user", content: `I want to set up a ${template.name} worker` },
+    ]);
+    setIsTyping(true);
+    setTimeout(() => {
+      setConversation((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Perfect! ${template.name} is a great choice. ${template.description}. Click "Continue to Configure" below to customize the settings.`,
+        },
+      ]);
+      setIsTyping(false);
+      setHasResponse(true);
+    }, 1500);
   };
 
   return (
@@ -240,25 +261,7 @@ function DescribeStep({
               {templates.map((template) => (
                 <button
                   key={template.id}
-                  onClick={() => {
-                    setSelectedTemplate(template.id);
-                    setConversation([
-                      ...conversation,
-                      { role: "user", content: `I want to set up a ${template.name} worker` },
-                    ]);
-                    setIsTyping(true);
-                    setTimeout(() => {
-                      setConversation((prev) => [
-                        ...prev,
-                        {
-                          role: "assistant",
-                          content: `Perfect! ${template.name} is a great choice. ${template.description}. Let me configure this for you with the recommended settings.`,
-                        },
-                      ]);
-                      setIsTyping(false);
-                      setTimeout(onNext, 1500);
-                    }, 2000);
-                  }}
+                  onClick={() => handleTemplateClick(template)}
                   className={cn(
                     "p-4 rounded-lg border text-left transition-all hover:border-primary/50 hover:bg-muted/50",
                     selectedTemplate === template.id && "border-primary bg-primary/5"
@@ -275,6 +278,16 @@ function DescribeStep({
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Continue button - show after AI response */}
+        {hasResponse && !isTyping && (
+          <div className="flex justify-center mt-6">
+            <Button onClick={onNext} size="lg" className="gap-2">
+              Continue to Configure
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </div>
         )}
       </div>
@@ -301,7 +314,7 @@ function DescribeStep({
 function ConfigureStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   return (
     <div className="flex-1 overflow-auto p-6">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 pb-8">
         {/* Worker name */}
         <div className="space-y-2">
           <Label htmlFor="name">Worker Name</Label>
@@ -323,24 +336,20 @@ function ConfigureStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
                 className="flex items-center justify-between p-3 rounded-lg border"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-muted-foreground" />
-                  </div>
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      source.connected ? "bg-green-500" : "bg-muted"
+                    )}
+                  />
                   <div>
                     <p className="text-sm font-medium">{source.name}</p>
                     <p className="text-xs text-muted-foreground">{source.type}</p>
                   </div>
                 </div>
-                {source.connected ? (
-                  <Badge variant="outline" className="text-xs text-green-600 border-green-200 bg-green-50">
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                    Connected
-                  </Badge>
-                ) : (
-                  <Button variant="outline" size="sm">
-                    Connect
-                  </Button>
-                )}
+                <Button variant="outline" size="sm">
+                  {source.connected ? "Connected" : "Connect"}
+                </Button>
               </div>
             ))}
           </CardContent>
@@ -356,61 +365,67 @@ function ConfigureStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50">
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-primary bg-primary/5">
                 <input type="radio" name="trigger" defaultChecked className="w-4 h-4" />
                 <div>
                   <p className="text-sm font-medium">Scheduled</p>
                   <p className="text-xs text-muted-foreground">Run daily at 9:00 AM</p>
                 </div>
-              </label>
-              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50">
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg border">
                 <input type="radio" name="trigger" className="w-4 h-4" />
                 <div>
-                  <p className="text-sm font-medium">On new data</p>
-                  <p className="text-xs text-muted-foreground">Run when new documents are detected</p>
+                  <p className="text-sm font-medium">On demand</p>
+                  <p className="text-xs text-muted-foreground">Run manually when needed</p>
                 </div>
-              </label>
-              <label className="flex items-center gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/50">
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg border">
                 <input type="radio" name="trigger" className="w-4 h-4" />
                 <div>
-                  <p className="text-sm font-medium">Manual only</p>
-                  <p className="text-xs text-muted-foreground">Run only when triggered manually</p>
+                  <p className="text-sm font-medium">Event-based</p>
+                  <p className="text-xs text-muted-foreground">Run when new data arrives</p>
                 </div>
-              </label>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Approval rules */}
+        {/* Approval Rules */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Settings className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4" />
               Approval Rules
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg border">
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-primary bg-primary/5">
+                <input type="radio" name="approval" defaultChecked className="w-4 h-4" />
                 <div>
-                  <p className="text-sm font-medium">Auto-approve low priority items</p>
-                  <p className="text-xs text-muted-foreground">P3 and P4 items are auto-approved</p>
+                  <p className="text-sm font-medium">Auto-approve high confidence</p>
+                  <p className="text-xs text-muted-foreground">
+                    Auto-approve when confidence &gt; 95%, otherwise require manual review
+                  </p>
                 </div>
-                <input type="checkbox" defaultChecked className="w-4 h-4" />
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg border">
+              <div className="flex items-center gap-3 p-3 rounded-lg border">
+                <input type="radio" name="approval" className="w-4 h-4" />
                 <div>
-                  <p className="text-sm font-medium">Require review for high priority</p>
-                  <p className="text-xs text-muted-foreground">P1 and P2 items need human review</p>
+                  <p className="text-sm font-medium">Always require approval</p>
+                  <p className="text-xs text-muted-foreground">
+                    All actions require manual approval
+                  </p>
                 </div>
-                <input type="checkbox" defaultChecked className="w-4 h-4" />
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg border">
+              <div className="flex items-center gap-3 p-3 rounded-lg border">
+                <input type="radio" name="approval" className="w-4 h-4" />
                 <div>
-                  <p className="text-sm font-medium">Escalate critical items</p>
-                  <p className="text-xs text-muted-foreground">P1 items escalate to department head</p>
+                  <p className="text-sm font-medium">Auto-approve all</p>
+                  <p className="text-xs text-muted-foreground">
+                    Automatically approve all actions (not recommended)
+                  </p>
                 </div>
-                <input type="checkbox" defaultChecked className="w-4 h-4" />
               </div>
             </div>
           </CardContent>
@@ -435,48 +450,45 @@ function ConfigureStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
 function PreviewStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   return (
     <div className="flex-1 overflow-auto p-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold">Output Preview</h3>
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="text-center mb-6">
+          <h3 className="text-lg font-semibold mb-2">Output Preview</h3>
           <p className="text-sm text-muted-foreground">
-            This is how your worker's output will appear. You can customize the layout and columns.
+            This is how your worker's output will look. The Kanban board will be populated with real regulatory data.
           </p>
         </div>
 
-        {/* Kanban preview - matching Bloom & Wild Legislation Tracker */}
-        <Card className="mb-6">
+        {/* Kanban Preview */}
+        <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium">Legislation Tracker</CardTitle>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">Filter</Button>
-                <Button variant="outline" size="sm">Export</Button>
-              </div>
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Layout className="w-4 h-4" />
+                Legislation Tracker Board
+              </CardTitle>
+              <Badge variant="outline">Preview</Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-4">
               {previewData.columns.map((column, colIndex) => (
-                <div key={column} className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                <div key={colIndex} className="space-y-3">
+                  <div className="font-medium text-sm text-muted-foreground border-b pb-2">
                     {column}
                   </div>
                   {previewData.items
                     .filter((item) => item.column === colIndex)
-                    .map((item, index) => (
-                      <div
-                        key={index}
-                        className="p-3 rounded-lg border bg-card hover:shadow-sm transition-shadow cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
+                    .map((item, itemIndex) => (
+                      <Card key={itemIndex} className="p-3">
+                        <p className="text-sm font-medium mb-2 line-clamp-2">{item.title}</p>
+                        <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
                             className={cn(
                               "text-xs",
                               item.status === "In review"
-                                ? "bg-blue-50 text-blue-700 border-blue-200"
-                                : "bg-amber-50 text-amber-700 border-amber-200"
+                                ? "border-amber-500 text-amber-600"
+                                : "border-red-500 text-red-600"
                             )}
                           >
                             {item.status}
@@ -485,12 +497,46 @@ function PreviewStep({ onNext, onBack }: { onNext: () => void; onBack: () => voi
                             {item.priority}
                           </Badge>
                         </div>
-                        <p className="text-sm font-medium mb-1 line-clamp-2">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">{item.date}</p>
-                      </div>
+                        <p className="text-xs text-muted-foreground mt-2">{item.date}</p>
+                      </Card>
                     ))}
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Output Format Options */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Output Format
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="flex items-center gap-3 p-3 rounded-lg border border-primary bg-primary/5">
+                <input type="radio" name="format" defaultChecked className="w-4 h-4" />
+                <div>
+                  <p className="text-sm font-medium">Kanban Board</p>
+                  <p className="text-xs text-muted-foreground">Visual task board</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg border">
+                <input type="radio" name="format" className="w-4 h-4" />
+                <div>
+                  <p className="text-sm font-medium">Table View</p>
+                  <p className="text-xs text-muted-foreground">Spreadsheet format</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg border">
+                <input type="radio" name="format" className="w-4 h-4" />
+                <div>
+                  <p className="text-sm font-medium">Report</p>
+                  <p className="text-xs text-muted-foreground">PDF document</p>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -595,8 +641,8 @@ function DeployStep({ onBack }: { onBack: () => void }) {
               <Button variant="outline" onClick={() => setLocation("/workers")} className="flex-1">
                 View All Workers
               </Button>
-              <Button onClick={() => setLocation("/workers/2")} className="flex-1">
-                View Worker
+              <Button onClick={() => setLocation("/workers/legislation-tracker/output")} className="flex-1">
+                View Output
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
