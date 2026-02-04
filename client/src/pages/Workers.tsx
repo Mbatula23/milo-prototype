@@ -374,10 +374,12 @@ export default function Workers() {
                   Or create a new worker by describing what you want to automate
                   in plain English.
                 </p>
-                <Button onClick={() => setShowChat(true)} className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  Create New Worker
-                </Button>
+                <Link href="/workers/new">
+                  <Button className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Create New Worker
+                  </Button>
+                </Link>
               </div>
             </div>
           )}

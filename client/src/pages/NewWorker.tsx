@@ -28,7 +28,7 @@ import { Link, useLocation } from "wouter";
 /*
  * NewWorker Page - Multi-step worker creation flow
  * 
- * Design: Conversational start (like Twin) → Configuration → Preview → Deploy
+ * Design: Full-width conversational chat with compact templates sidebar
  * Shows the full journey from describing what you want to the final artifact
  */
 
@@ -213,100 +213,105 @@ function DescribeStep({
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Chat messages */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {conversation.map((msg, index) => (
-          <div
-            key={index}
-            className={cn(
-              "flex",
-              msg.role === "user" ? "justify-end" : "justify-start"
-            )}
-          >
-            <div
-              className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-3",
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
-              )}
-            >
-              {msg.role === "assistant" && (
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-medium text-primary">Milo</span>
-                </div>
-              )}
-              <p className="text-sm">{msg.content}</p>
-            </div>
-          </div>
-        ))}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-muted rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                <span className="text-sm text-muted-foreground">Milo is thinking...</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Templates - show only at start */}
-        {conversation.length === 1 && (
-          <div className="mt-6">
-            <p className="text-sm text-muted-foreground mb-3">Or start from a template:</p>
-            <div className="grid grid-cols-2 gap-3">
-              {templates.map((template) => (
-                <button
-                  key={template.id}
-                  onClick={() => handleTemplateClick(template)}
+    <div className="flex-1 flex overflow-hidden">
+      {/* Main chat area - full width */}
+      <div className="flex-1 flex flex-col">
+        {/* Chat messages */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="max-w-3xl mx-auto space-y-4">
+            {conversation.map((msg, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "flex",
+                  msg.role === "user" ? "justify-end" : "justify-start"
+                )}
+              >
+                <div
                   className={cn(
-                    "p-4 rounded-lg border text-left transition-all hover:border-primary/50 hover:bg-muted/50",
-                    selectedTemplate === template.id && "border-primary bg-primary/5"
+                    "max-w-[80%] rounded-2xl px-4 py-3",
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                   )}
                 >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Bot className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-medium text-sm">{template.name}</span>
+                  {msg.role === "assistant" && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-medium text-primary">Milo</span>
+                    </div>
+                  )}
+                  <p className="text-sm">{msg.content}</p>
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-muted rounded-2xl px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">Milo is thinking...</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{template.description}</p>
-                  <Badge variant="outline" className="mt-2 text-xs">
-                    {template.category}
-                  </Badge>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+                </div>
+              </div>
+            )}
 
-        {/* Continue button - show after AI response */}
-        {hasResponse && !isTyping && (
-          <div className="flex justify-center mt-6">
-            <Button onClick={onNext} size="lg" className="gap-2">
-              Continue to Configure
-              <ArrowRight className="w-4 h-4" />
+            {/* Continue button - show after AI response */}
+            {hasResponse && !isTyping && (
+              <div className="flex justify-center mt-6">
+                <Button onClick={onNext} size="lg" className="gap-2">
+                  Continue to Configure
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Input - fixed at bottom, full width */}
+        <div className="p-4 border-t border-border bg-background">
+          <div className="max-w-3xl mx-auto flex gap-2">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Describe what you want to automate..."
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              className="flex-1"
+            />
+            <Button onClick={handleSend} disabled={!message.trim() || isTyping}>
+              <Send className="w-4 h-4" />
             </Button>
           </div>
-        )}
-      </div>
-
-      {/* Input */}
-      <div className="p-4 border-t border-border">
-        <div className="flex gap-2">
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Describe what you want to automate..."
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            className="flex-1"
-          />
-          <Button onClick={handleSend} disabled={!message.trim() || isTyping}>
-            <Send className="w-4 h-4" />
-          </Button>
         </div>
       </div>
+
+      {/* Templates sidebar - compact on right */}
+      {conversation.length === 1 && (
+        <div className="w-72 border-l border-border p-4 overflow-auto bg-muted/30">
+          <p className="text-sm font-medium text-muted-foreground mb-3">Or start from a template:</p>
+          <div className="space-y-2">
+            {templates.map((template) => (
+              <button
+                key={template.id}
+                onClick={() => handleTemplateClick(template)}
+                className={cn(
+                  "w-full p-3 rounded-lg border text-left transition-all hover:border-primary/50 hover:bg-background",
+                  selectedTemplate === template.id && "border-primary bg-primary/5"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Bot className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="font-medium text-sm">{template.name}</span>
+                </div>
+                <p className="text-xs text-muted-foreground line-clamp-2">{template.description}</p>
+                <Badge variant="outline" className="mt-2 text-[10px]">
+                  {template.category}
+                </Badge>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -450,9 +455,9 @@ function ConfigureStep({ onNext, onBack }: { onNext: () => void; onBack: () => v
 function PreviewStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }) {
   return (
     <div className="flex-1 overflow-auto p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 pb-8">
         <div className="text-center mb-6">
-          <h3 className="text-lg font-semibold mb-2">Output Preview</h3>
+          <h3 className="text-lg font-semibold">Output Preview</h3>
           <p className="text-sm text-muted-foreground">
             This is how your worker's output will look. The Kanban board will be populated with real regulatory data.
           </p>
@@ -460,44 +465,46 @@ function PreviewStep({ onNext, onBack }: { onNext: () => void; onBack: () => voi
 
         {/* Kanban Preview */}
         <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Layout className="w-4 h-4" />
-                Legislation Tracker Board
-              </CardTitle>
-              <Badge variant="outline">Preview</Badge>
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Layout className="w-4 h-4" />
+              Legislation Tracker Board
+            </CardTitle>
+            <Badge variant="outline">Preview</Badge>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-4 gap-4">
               {previewData.columns.map((column, colIndex) => (
-                <div key={colIndex} className="space-y-3">
-                  <div className="font-medium text-sm text-muted-foreground border-b pb-2">
+                <div key={column} className="space-y-3">
+                  <h4 className="text-xs font-medium text-muted-foreground truncate">
                     {column}
-                  </div>
+                  </h4>
                   {previewData.items
                     .filter((item) => item.column === colIndex)
-                    .map((item, itemIndex) => (
-                      <Card key={itemIndex} className="p-3">
-                        <p className="text-sm font-medium mb-2 line-clamp-2">{item.title}</p>
+                    .map((item, idx) => (
+                      <Card key={idx} className="p-3">
+                        <p className="text-xs font-medium line-clamp-2 mb-2">
+                          {item.title}
+                        </p>
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
                             className={cn(
-                              "text-xs",
+                              "text-[10px]",
                               item.status === "In review"
-                                ? "border-amber-500 text-amber-600"
+                                ? "border-yellow-500 text-yellow-600"
                                 : "border-red-500 text-red-600"
                             )}
                           >
                             {item.status}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-[10px]">
                             {item.priority}
                           </Badge>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2">{item.date}</p>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          {item.date}
+                        </p>
                       </Card>
                     ))}
                 </div>
@@ -506,7 +513,7 @@ function PreviewStep({ onNext, onBack }: { onNext: () => void; onBack: () => voi
           </CardContent>
         </Card>
 
-        {/* Output Format Options */}
+        {/* Output format selection */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium flex items-center gap-2">
