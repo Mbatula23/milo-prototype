@@ -79,7 +79,7 @@ const Sidebar = ({ activePage, onNavigate }) => {
     <div style={{ width:224, background:t.sidebar, borderRight:`1px solid ${t.sidebarBorder}`, display:"flex", flexDirection:"column", height:"100vh", flexShrink:0 }}>
       <div style={{ padding:"16px 16px 20px", display:"flex", alignItems:"center", gap:12 }}>
         <div style={{ width:36, height:36, borderRadius:t.r, background:t.primary, display:"flex", alignItems:"center", justifyContent:"center" }}><span style={{ color:t.primaryFg, fontSize:14, fontWeight:700 }}>M</span></div>
-        <span style={{ fontSize:16, fontWeight:600, color:t.fg }}>Milo</span>
+        <div><div style={{ fontSize:16, fontWeight:600, color:t.fg }}>Milo</div><div style={{ fontSize:10, color:t.fgFaint, marginTop:-2 }}>AI Finance Ops</div></div>
       </div>
       <nav style={{ flex:1, padding:"0 12px" }}>
         {nav.map(item => {
@@ -103,42 +103,189 @@ const Sidebar = ({ activePage, onNavigate }) => {
   );
 };
 
-// ─── Workers ────────────────────────────────────────────────────────────────
-const WorkersPage = ({ onNavigate }) => {
-  const workers = [
+// ─── Workers (empty state → populated after worker creation) ─────────────────
+const WorkersPage = ({ onNavigate, hasWorker }) => {
+  const workers = hasWorker ? [
     { id:"hf", name:"Month-End Accruals", desc:"Budget vs actuals reconciliation + accrual journal", cat:"finance", icon:ic.bar, lastRun:"2 min ago", rate:94.2 },
     { id:"po", name:"PO Matching", desc:"Three-way matching: PO → Packing List → Invoice", cat:"finance", icon:ic.file, lastRun:"2 min ago", rate:95.0 },
     { id:"reg", name:"Regulatory Monitor", desc:"EU regulatory changes affecting packaging & labeling", cat:"compliance", icon:ic.shield, lastRun:"1 hour ago", rate:100 },
-  ];
+  ] : [];
   return (
     <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
       <div style={{ padding:16, borderBottom:`1px solid ${t.border}` }}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:hasWorker?16:0 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>{ic.bot({ size:20, color:t.fgMuted })}<h1 style={{ fontSize:18, fontWeight:600, margin:0 }}>Workers</h1></div>
-          <Btn>{ic.plus({ size:16 })} New Worker</Btn>
+          <Btn onClick={()=>onNavigate("create-worker")}>{ic.plus({ size:16 })} New Worker</Btn>
         </div>
-        <div style={{ position:"relative" }}>
+        {hasWorker && <div style={{ position:"relative" }}>
           <div style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)" }}>{ic.search({ size:16, color:t.fgFaint })}</div>
           <input placeholder="Search workers..." style={{ width:"100%", padding:"8px 12px 8px 36px", background:t.muted, border:"none", borderRadius:t.r, fontSize:14, fontFamily:ff.sans, color:t.fg, outline:"none", boxSizing:"border-box" }}/>
-        </div>
+        </div>}
       </div>
-      <div style={{ flex:1, overflow:"auto", padding:16 }}>
-        {[{k:"finance",l:"Finance"},{k:"compliance",l:"Compliance"}].map(cat => {
-          const cw = workers.filter(w => w.cat===cat.k);
-          return <div key={cat.k} style={{ marginBottom:24 }}>
-            <div style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:10, paddingLeft:4 }}>{cat.l} ({cw.length})</div>
-            {cw.map(w => <Card key={w.id} style={{ marginBottom:8, cursor:w.id==="hf"?"pointer":"default" }}>
-              <button onClick={()=>{if(w.id==="hf")onNavigate("worker-detail")}} style={{ display:"flex", alignItems:"flex-start", gap:12, width:"100%", textAlign:"left", padding:16, background:"none", border:"none", cursor:"inherit", fontFamily:ff.sans }}>
-                <div style={{ width:40, height:40, borderRadius:t.r, background:t.muted, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{w.icon({ size:20, color:t.fgMuted })}</div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}><span style={{ fontSize:14, fontWeight:500, color:t.fg }}>{w.name}</span><Badge variant="success">{ic.play({})} Active</Badge></div>
-                  <p style={{ fontSize:12, color:t.fgMuted, margin:0 }}>{w.desc}</p>
-                  <div style={{ display:"flex", gap:12, marginTop:8, fontSize:12, color:t.fgFaint }}><span style={{ display:"flex", alignItems:"center", gap:4 }}>{ic.clock({ size:12, color:t.fgFaint })} {w.lastRun}</span><span style={{ display:"flex", alignItems:"center", gap:4 }}>{ic.trend({ size:12, color:t.fgFaint })} {w.rate}%</span></div>
+      {hasWorker ? (
+        <div style={{ flex:1, overflow:"auto", padding:16 }}>
+          {[{k:"finance",l:"Finance"},{k:"compliance",l:"Compliance"}].map(cat => {
+            const cw = workers.filter(w => w.cat===cat.k);
+            if(!cw.length) return null;
+            return <div key={cat.k} style={{ marginBottom:24 }}>
+              <div style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:10, paddingLeft:4 }}>{cat.l} ({cw.length})</div>
+              {cw.map(w => <Card key={w.id} style={{ marginBottom:8, cursor:w.id==="hf"?"pointer":"default" }}>
+                <button onClick={()=>{if(w.id==="hf")onNavigate("worker-detail")}} style={{ display:"flex", alignItems:"flex-start", gap:12, width:"100%", textAlign:"left", padding:16, background:"none", border:"none", cursor:"inherit", fontFamily:ff.sans }}>
+                  <div style={{ width:40, height:40, borderRadius:t.r, background:t.muted, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{w.icon({ size:20, color:t.fgMuted })}</div>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}><span style={{ fontSize:14, fontWeight:500, color:t.fg }}>{w.name}</span><Badge variant="success">{ic.play({})} Active</Badge></div>
+                    <p style={{ fontSize:12, color:t.fgMuted, margin:0 }}>{w.desc}</p>
+                    <div style={{ display:"flex", gap:12, marginTop:8, fontSize:12, color:t.fgFaint }}><span style={{ display:"flex", alignItems:"center", gap:4 }}>{ic.clock({ size:12, color:t.fgFaint })} {w.lastRun}</span><span style={{ display:"flex", alignItems:"center", gap:4 }}>{ic.trend({ size:12, color:t.fgFaint })} {w.rate}%</span></div>
+                  </div>
+                </button>
+              </Card>)}
+            </div>;
+          })}
+        </div>
+      ) : (
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ textAlign:"center", maxWidth:480 }}>
+            <div style={{ width:56, height:56, borderRadius:12, background:t.muted, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>{ic.bot({ size:28, color:t.fgFaint })}</div>
+            <h2 style={{ fontSize:18, fontWeight:600, color:t.fg, margin:"0 0 6px" }}>Create your first worker</h2>
+            <p style={{ fontSize:14, color:t.fgMuted, margin:"0 0 24px", lineHeight:1.5 }}>Workers automate repetitive finance tasks. Describe what you need in plain English and Milo will build it.</p>
+            <Btn onClick={()=>onNavigate("create-worker")} style={{ padding:"10px 20px", fontSize:14 }}>{ic.plus({ size:16 })} New Worker</Btn>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Create Worker (Builder) ─────────────────────────────────────────────────
+const CreateWorkerPage = ({ onNavigate, onWorkerCreated }) => {
+  const [phase, setPhase] = useState("prompt"); // prompt | configuring | done
+  const [promptText, setPromptText] = useState("");
+
+  const samplePrompt = "Each month, reconcile our budget against general ledger actuals for HelloFresh Nordic Sweden (Entity 029 + 055), calculate accrual amounts by account and supplier, and generate a review journal for approval.";
+
+  const templates = [
+    { name:"Month-End Accruals", desc:"Budget vs actuals reconciliation + journal generation", icon:ic.bar },
+    { name:"PO Matching", desc:"Three-way matching for invoices, POs, and packing lists", icon:ic.file },
+    { name:"Legislation Tracker", desc:"Monitor regulatory changes across jurisdictions", icon:ic.shield },
+    { name:"Spend Analytics", desc:"Categorise and analyse company spending", icon:ic.trend },
+  ];
+
+  const handleSubmit = () => {
+    if(!promptText.trim()) return;
+    setPhase("configuring");
+    setTimeout(() => setPhase("done"), 3500);
+  };
+
+  const handleSelectTemplate = (tmpl) => {
+    if(tmpl.name === "Month-End Accruals") {
+      setPromptText(samplePrompt);
+      setTimeout(() => {
+        setPhase("configuring");
+        setTimeout(() => setPhase("done"), 3500);
+      }, 400);
+    }
+  };
+
+  const configSteps = [
+    "Understanding scope and requirements",
+    "Identifying data sources and inputs",
+    "Configuring calculation logic",
+    "Setting up output format and review flow",
+    "Finalising worker configuration",
+  ];
+
+  if(phase === "configuring" || phase === "done") {
+    const doneCount = phase === "done" ? configSteps.length : 3;
+    return (
+      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+        <div style={{ padding:"12px 16px", borderBottom:`1px solid ${t.border}`, display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+          <Btn variant="ghost" onClick={()=>{ setPhase("prompt"); }} style={{ padding:6 }}>{ic.arwL({ size:16 })}</Btn>
+          <div>
+            <div style={{ fontSize:15, fontWeight:600, color:t.fg }}>Milo Builder</div>
+            <div style={{ fontSize:12, color:t.fgMuted }}>Creating: Month-End Accruals</div>
+          </div>
+        </div>
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ textAlign:"center", maxWidth:400 }}>
+            {phase === "done" ? (
+              <div style={{ width:56, height:56, borderRadius:"50%", background:t.successBg, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>{ic.checkCirc({ size:28, color:t.success })}</div>
+            ) : (
+              <div style={{ width:56, height:56, borderRadius:"50%", background:t.infoBg, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px" }}>
+                <div style={{ animation:"spin 1.5s linear infinite" }}>{ic.loader({ size:28, color:t.info })}</div>
+              </div>
+            )}
+            <h2 style={{ fontSize:18, fontWeight:600, color:t.fg, margin:"0 0 4px" }}>{phase==="done" ? "Worker ready" : "Setting up your worker…"}</h2>
+            <p style={{ fontSize:13, color:t.fgMuted, margin:"0 0 28px" }}>{phase==="done" ? "Month-End Accruals is configured and ready to run." : "Milo is analysing your requirements and configuring the worker."}</p>
+            <div style={{ textAlign:"left", maxWidth:320, margin:"0 auto" }}>
+              {configSteps.map((step,i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"7px 0", fontSize:13 }}>
+                  {i < doneCount
+                    ? <>{ic.checkCirc({ size:16, color:t.success })}<span style={{ color:t.fgMuted }}>{step}</span></>
+                    : i === doneCount
+                      ? <><div style={{ width:16, height:16, borderRadius:"50%", border:`2px solid ${t.info}`, borderTopColor:"transparent", animation:"spin 0.8s linear infinite", flexShrink:0 }}/><span style={{ color:t.fg, fontWeight:500 }}>{step}</span></>
+                      : <><div style={{ width:16, height:16, borderRadius:"50%", border:`2px solid ${t.border}`, flexShrink:0 }}/><span style={{ color:t.fgFaint }}>{step}</span></>
+                  }
                 </div>
-              </button>
-            </Card>)}
-          </div>;
-        })}
+              ))}
+            </div>
+            {phase === "done" && (
+              <div style={{ marginTop:28 }}>
+                <Btn onClick={() => { onWorkerCreated(); onNavigate("worker-detail"); }} style={{ padding:"10px 24px", fontSize:14 }}>
+                  Open Worker
+                </Btn>
+              </div>
+            )}
+          </div>
+        </div>
+        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${t.border}`, display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+        <Btn variant="ghost" onClick={()=>onNavigate("workers")} style={{ padding:6 }}>{ic.arwL({ size:16 })}</Btn>
+        <span style={{ fontSize:15, fontWeight:600, color:t.fg }}>Milo</span>
+        <span style={{ fontSize:15, color:t.fgMuted }}>Builder</span>
+      </div>
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", overflow:"auto" }}>
+        <div style={{ textAlign:"center", maxWidth:560, padding:"24px 16px", width:"100%" }}>
+          <div style={{ width:56, height:56, borderRadius:12, background:t.muted, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px" }}>{ic.bot({ size:28, color:t.fgFaint })}</div>
+          <h2 style={{ fontSize:20, fontWeight:600, color:t.fg, margin:"0 0 6px" }}>Create a new worker</h2>
+          <p style={{ fontSize:14, color:t.fgMuted, margin:"0 0 24px" }}>Describe what you want to automate in plain English</p>
+
+          <div style={{ position:"relative", textAlign:"left", marginBottom:24 }}>
+            <textarea
+              value={promptText}
+              onChange={(e)=>setPromptText(e.target.value)}
+              placeholder="e.g. Each month, reconcile our budget against actuals and generate an accrual journal for review..."
+              rows={4}
+              style={{ width:"100%", padding:"14px 48px 14px 14px", fontSize:14, fontFamily:ff.sans, border:`1px solid ${t.border}`, borderRadius:t.r+2, resize:"none", outline:"none", color:t.fg, background:t.card, lineHeight:1.5, boxSizing:"border-box" }}
+            />
+            <div style={{ position:"absolute", left:12, bottom:12, display:"flex", gap:6 }}>
+              <button style={{ background:"none", border:"none", cursor:"pointer", padding:4, display:"flex" }}>{ic.upload({ size:16, color:t.fgFaint })}</button>
+            </div>
+            <button onClick={handleSubmit} style={{ position:"absolute", right:12, bottom:12, width:32, height:32, borderRadius:8, background:promptText.trim()?t.primary:t.muted, border:"none", cursor:promptText.trim()?"pointer":"default", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              {ic.arwL({ size:16, color:promptText.trim()?t.primaryFg:t.fgFaint, style:{ transform:"rotate(180deg)" } })}
+            </button>
+          </div>
+
+          <div style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:12 }}>Or start from a template</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+            {templates.map(tmpl => (
+              <Card key={tmpl.name} style={{ cursor:"pointer", transition:"box-shadow 0.15s" }}>
+                <button onClick={()=>handleSelectTemplate(tmpl)} style={{ display:"flex", alignItems:"flex-start", gap:10, width:"100%", textAlign:"left", padding:14, background:"none", border:"none", cursor:"pointer", fontFamily:ff.sans }}>
+                  <div style={{ width:32, height:32, borderRadius:t.r, background:t.muted, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{tmpl.icon({ size:16, color:t.fgMuted })}</div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:500, color:t.fg, marginBottom:2 }}>{tmpl.name}</div>
+                    <div style={{ fontSize:11, color:t.fgMuted, lineHeight:1.4 }}>{tmpl.desc}</div>
+                  </div>
+                </button>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -147,7 +294,7 @@ const WorkersPage = ({ onNavigate }) => {
 // ─── Worker Detail with Prepare Flow ────────────────────────────────────────
 const WorkerDetailPage = ({ onNavigate }) => {
   const [activeTab, setActiveTab] = useState("output");
-  const [prepareState, setPrepareState] = useState("idle");
+  const [prepareState, setPrepareState] = useState("idle"); // idle | uploading | processing | done
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const expectedFiles = [
@@ -182,6 +329,7 @@ const WorkerDetailPage = ({ onNavigate }) => {
 
   return (
     <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      {/* Header */}
       <div style={{ padding:16, borderBottom:`1px solid ${t.border}`, flexShrink:0 }}>
         <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:12 }}>
           <Btn variant="ghost" onClick={()=>onNavigate("workers")} style={{ padding:6 }}>{ic.arwL({ size:16 })}</Btn>
@@ -201,6 +349,7 @@ const WorkerDetailPage = ({ onNavigate }) => {
         </div>
       </div>
 
+      {/* Tabs */}
       <div style={{ padding:"0 16px", borderBottom:`1px solid ${t.border}`, flexShrink:0, display:"flex", gap:16 }}>
         {tabs.map(tab => {
           const isActive = activeTab === tab.key;
@@ -213,8 +362,26 @@ const WorkerDetailPage = ({ onNavigate }) => {
         })}
       </div>
 
+      {/* Content */}
       <div style={{ flex:1, overflow:"auto", padding:16 }}>
 
+        {/* ── Prepare: Idle CTA ── */}
+        {prepareState === "idle" && activeTab === "output" && (
+          <Card style={{ marginBottom:16, background:`${t.infoBg}`, borderColor:t.infoBorder }}>
+            <div style={{ padding:16, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                {ic.calendar({ size:20, color:t.info })}
+                <div>
+                  <div style={{ fontSize:14, fontWeight:600, color:t.fg }}>Ready to prepare February 2026</div>
+                  <div style={{ fontSize:12, color:t.fgMuted, marginTop:2 }}>Upload data and generate the next accrual journal.</div>
+                </div>
+              </div>
+              <Btn onClick={()=>setPrepareState("uploading")} style={{ flexShrink:0 }}>Prepare New Period</Btn>
+            </div>
+          </Card>
+        )}
+
+        {/* ── Prepare: Upload Step ── */}
         {prepareState === "uploading" && (
           <Card style={{ marginBottom:16, overflow:"hidden" }}>
             <div style={{ padding:"16px 16px 12px", borderBottom:`1px solid ${t.borderLight}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
@@ -234,4 +401,321 @@ const WorkerDetailPage = ({ onNavigate }) => {
               {expectedFiles.map(ef => {
                 const uploaded = uploadedFiles.find(u => u.key === ef.key);
                 return (
-                  <div key={ef.key} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", borderRadius:t.r, border:`1px dashed ${uploaded ?
+                  <div key={ef.key} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", borderRadius:t.r, border:`1px dashed ${uploaded ? t.successBorder : t.border}`, background: uploaded ? `${t.successBg}` : t.card, marginBottom:8, transition:"all 0.2s" }}>
+                    {uploaded
+                      ? <div style={{ width:32, height:32, borderRadius:t.r, background:t.successBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{ic.checkCirc({ size:16, color:t.success })}</div>
+                      : <div style={{ width:32, height:32, borderRadius:t.r, background:t.muted, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{ic.upload({ size:16, color:t.fgFaint })}</div>
+                    }
+                    <div style={{ flex:1, minWidth:0 }}>
+                      {uploaded ? (
+                        <>
+                          <div style={{ fontSize:13, fontWeight:500, color:t.fg }}>{uploaded.name}</div>
+                          <div style={{ fontSize:11, color:t.fgMuted }}>{uploaded.size} · uploaded {uploaded.time}</div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ fontSize:13, fontWeight:500, color:t.fg }}>{ef.label}</div>
+                          <div style={{ fontSize:11, color:t.fgFaint }}>{ef.hint}</div>
+                        </>
+                      )}
+                    </div>
+                    {uploaded ? (
+                      <button onClick={() => setUploadedFiles(prev => prev.filter(u => u.key !== ef.key))} style={{ background:"none", border:"none", cursor:"pointer", padding:4 }}>{ic.trash({ size:14, color:t.fgFaint })}</button>
+                    ) : (
+                      <Btn variant="outline" onClick={() => simulateUpload(ef.key)} style={{ fontSize:12, padding:"4px 10px" }}>{ic.upload({ size:12 })} Upload</Btn>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Progress + action */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:16, paddingTop:12, borderTop:`1px solid ${t.borderLight}` }}>
+                <div style={{ fontSize:12, color:t.fgMuted }}>
+                  {uploadedFiles.length} of {expectedFiles.length} files uploaded
+                  <div style={{ width:120, height:4, background:t.muted, borderRadius:2, overflow:"hidden", marginTop:6 }}>
+                    <div style={{ width:`${(uploadedFiles.length/expectedFiles.length)*100}%`, height:"100%", background: allUploaded ? t.success : t.fgFaint, borderRadius:2, transition:"width 0.3s" }}/>
+                  </div>
+                </div>
+                <Btn onClick={startPrepare} disabled={!allUploaded}>
+                  Prepare Accruals
+                </Btn>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* ── Prepare: Processing ── */}
+        {prepareState === "processing" && (
+          <Card style={{ marginBottom:16, overflow:"hidden" }}>
+            <div style={{ padding:24, display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center" }}>
+              <div style={{ width:48, height:48, borderRadius:"50%", background:t.infoBg, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:16 }}>
+                <div style={{ animation:"spin 1.5s linear infinite" }}>{ic.loader({ size:24, color:t.info })}</div>
+              </div>
+              <div style={{ fontSize:15, fontWeight:600, color:t.fg, marginBottom:4 }}>Preparing February accruals…</div>
+              <div style={{ fontSize:13, color:t.fgMuted, marginBottom:20, maxWidth:400 }}>Milo is matching accounts, calculating budget variance, and generating the proposed journal.</div>
+              <div style={{ width:"100%", maxWidth:320 }}>
+                {["Parsing uploaded files", "Matching to chart of accounts", "Calculating budget variance", "Generating journal entries"].map((step,i) => (
+                  <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 0", fontSize:12 }}>
+                    {i < 2
+                      ? <>{ic.checkCirc({ size:14, color:t.success })}<span style={{ color:t.fgMuted }}>{step}</span></>
+                      : i === 2
+                        ? <><div style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${t.info}`, borderTopColor:"transparent", animation:"spin 0.8s linear infinite" }}/><span style={{ color:t.fg, fontWeight:500 }}>{step}</span></>
+                        : <><div style={{ width:14, height:14, borderRadius:"50%", border:`2px solid ${t.border}` }}/><span style={{ color:t.fgFaint }}>{step}</span></>
+                    }
+                  </div>
+                ))}
+              </div>
+            </div>
+            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          </Card>
+        )}
+
+        {/* ── Prepare: Done ── */}
+        {prepareState === "done" && (
+          <Card style={{ marginBottom:16, overflow:"hidden", borderColor:t.successBorder }}>
+            <div style={{ padding:20, display:"flex", alignItems:"center", gap:16 }}>
+              <div style={{ width:44, height:44, borderRadius:"50%", background:t.successBg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{ic.checkCirc({ size:24, color:t.success })}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:15, fontWeight:600, color:t.fg, marginBottom:2 }}>February accruals ready for review</div>
+                <div style={{ fontSize:13, color:t.fgMuted }}>18 journal lines · 872,415 SEK proposed · 1 flagged for low confidence</div>
+              </div>
+              <Btn onClick={() => { setPrepareState("idle"); setUploadedFiles([]); onNavigate("accruals-output"); }}>
+                Open Review
+              </Btn>
+            </div>
+          </Card>
+        )}
+
+        {/* ── Past Outputs ── */}
+        {activeTab === "output" && (
+          <>
+            {prepareState !== "idle" && <div style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:10, marginTop:8 }}>Past periods</div>}
+            {pastOutputs.map(po => (
+              <Card key={po.id} style={{ marginBottom:8, cursor: po.status==="review" ? "pointer" : "default" }}>
+                <button onClick={() => { if(po.status==="review") onNavigate("accruals-output"); }} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", padding:16, background:"none", border:"none", textAlign:"left", fontFamily:ff.sans, cursor: po.status==="review" ? "pointer" : "default" }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <div style={{ width:36, height:36, borderRadius:t.r, background: po.status==="review" ? t.infoBg : t.muted, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                      {po.status==="review" ? ic.alert({ size:16, color:t.info }) : ic.checkCirc({ size:16, color:t.fgFaint })}
+                    </div>
+                    <div>
+                      <div style={{ fontSize:14, fontWeight:500, color:t.fg, marginBottom:2 }}>{po.period}</div>
+                      <div style={{ fontSize:12, color:t.fgMuted }}>
+                        {po.lines} lines · {fmt(po.total)} SEK
+                        {po.flagged > 0 && <span style={{ color:t.warning }}> · {po.flagged} flagged</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, flexShrink:0 }}>
+                    <div style={{ textAlign:"right" }}>
+                      <Badge variant={po.status==="review" ? "info" : "outline"}>{po.status==="review" ? "Needs review" : "Posted"}</Badge>
+                      <div style={{ fontSize:11, color:t.fgFaint, marginTop:4 }}>{po.time}</div>
+                    </div>
+                    {po.status==="review" && ic.chevR({ size:16, color:t.fgFaint })}
+                  </div>
+                </button>
+              </Card>
+            ))}
+          </>
+        )}
+
+        {activeTab === "logs" && (
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:200, color:t.fgFaint, fontSize:14 }}>Execution logs</div>
+        )}
+        {activeTab === "config" && (
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:200, color:t.fgFaint, fontSize:14 }}>Worker configuration</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ─── Inbox ──────────────────────────────────────────────────────────────────
+const InboxPage = ({ onNavigate }) => {
+  const [expandedId, setExpandedId] = useState("hf-jan");
+  const items = [
+    { id:"hf-jan", type:"accruals", agent:"Month-End Accruals", title:"Jan 2026 Accrual Journal — ready for review", subtitle:"HelloFresh Nordic", issue:"18 journal lines. 859,231 SEK proposed. 2 flagged for low confidence.", rec:"REVIEW", reasoning:"High-confidence run (91%). Review 2 flagged: Payroll service, Other consulting.", conf:91, time:"08:47", priority:"high" },
+    { id:"reg-1", type:"regulatory", agent:"Regulatory Monitor", title:"New EU packaging regulation", subtitle:"Bloom & Wild · P1", issue:"Sustainable packaging requirements effective Q3 2026", rec:"REVIEW", reasoning:"High relevance. Recommend legal assessment within 7 days.", conf:92, time:"4h ago", priority:"high" },
+    { id:"po-1", type:"invoice", agent:"PO Matching", title:"INV-4521 — Quantity mismatch", subtitle:"Baby Mori / Jellycat", issue:"Invoice 520 units vs PO 500 (+20). Previous order short by 20.", rec:"APPROVE", reasoning:"PO-2024-1798 short 20 units. Likely catch-up shipment.", conf:87, time:"1h ago", priority:"normal" },
+  ];
+  const rcfg = { APPROVE:{ color:t.success, bg:t.successBg, icon:ic.check }, REVIEW:{ color:t.info, bg:t.infoBg, icon:ic.alert } };
+  return (
+    <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div style={{ padding:16, borderBottom:`1px solid ${t.border}`, flexShrink:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8 }}>{ic.inbox({ size:20, color:t.primary })}<h1 style={{ fontSize:18, fontWeight:600, margin:0 }}>Inbox</h1><Badge variant="secondary">{items.length} pending</Badge></div>
+      </div>
+      <div style={{ flex:1, overflow:"auto", padding:16 }}>
+        {items.map(item => {
+          const cfg = rcfg[item.rec]||rcfg.REVIEW; const isE = expandedId===item.id;
+          return <Card key={item.id} style={{ marginBottom:12, borderLeft:item.priority==="high"?`3px solid ${t.warning}`:undefined, ...(isE?{boxShadow:"0 0 0 1px rgba(30,41,59,0.12)"}:{}) }}>
+            <button onClick={()=>setExpandedId(isE?null:item.id)} style={{ display:"flex", alignItems:"flex-start", gap:16, width:"100%", textAlign:"left", padding:16, background:"none", border:"none", cursor:"pointer", fontFamily:ff.sans }}>
+              <div style={{ marginTop:2, width:32, height:32, borderRadius:t.r, background:cfg.bg, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{cfg.icon({ size:16, color:cfg.color })}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:12, color:t.fgFaint, marginBottom:4 }}>{item.agent}</div>
+                <div style={{ fontSize:14, fontWeight:500, color:t.fg, marginBottom:2 }}>{item.title}</div>
+                <div style={{ fontSize:13, color:t.fgMuted }}>{item.subtitle}</div>
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:12, flexShrink:0 }}>
+                <span style={{ fontSize:12, color:t.fgFaint }}>{item.time}</span>
+                <div style={{ transform:isE?"rotate(90deg)":"none", transition:"transform 0.15s", display:"flex" }}>{ic.chevR({ size:16, color:t.fgFaint })}</div>
+              </div>
+            </button>
+            {isE && <div style={{ padding:"0 16px 16px", borderTop:`1px solid ${t.borderLight}` }}>
+              <div style={{ padding:12, background:`${t.muted}cc`, borderRadius:t.r, margin:"16px 0 12px", fontSize:13 }}><span style={{ fontSize:11, color:t.fgFaint, display:"block", marginBottom:4 }}>Issue</span>{item.issue}</div>
+              <div style={{ padding:12, background:cfg.bg, borderRadius:t.r, marginBottom:16 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}><span style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em" }}>AI Recommendation</span><Badge variant={item.rec==="APPROVE"?"success":"info"}>{item.rec}</Badge></div>
+                  <div style={{ display:"flex", alignItems:"center", gap:6 }}><span style={{ fontSize:11, color:t.fgFaint }}>Confidence</span><div style={{ width:56, height:5, background:"rgba(255,255,255,0.6)", borderRadius:3, overflow:"hidden" }}><div style={{ width:`${item.conf}%`, height:"100%", background:t.fgFaint, borderRadius:3 }}/></div><span style={{ fontFamily:ff.mono, fontSize:11 }}>{item.conf}%</span></div>
+                </div>
+                <div style={{ fontSize:13, color:t.fg }}>{item.reasoning}</div>
+              </div>
+              <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+                <Btn variant="destructive">{ic.xCirc({ size:14 })} Reject</Btn>
+                {item.type==="accruals"?<Btn onClick={()=>onNavigate("accruals-output")}>Open Accruals Review</Btn>:<Btn>{ic.check({ size:14 })} Approve</Btn>}
+              </div>
+            </div>}
+          </Card>;
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ─── Accrual Lines ──────────────────────────────────────────────────────────
+const aLines = [
+  { id:1, acc:"6316", nm:"Equipment rental", cc:"3499", sup:"WBG-Pooling GmbH", b:150000, a:120675, p:29325, tr:[148200,151300,149800], cf:"high", mt:"straight-line" },
+  { id:2, acc:"6325", nm:"Utilities", cc:"3499", sup:"Öresundskraft", b:310000, a:249395, p:60605, tr:[298400,315200,307100], cf:"high", mt:"historical-avg" },
+  { id:3, acc:"6325", nm:"Utilities", cc:"3499", sup:"AICT EUR Re PropCo AB", b:60000, a:48270, p:11730, tr:[58900,61200,59500], cf:"medium", mt:"straight-line" },
+  { id:4, acc:"6330", nm:"Cleaning", cc:"3499", sup:"FHS AB", b:75000, a:60338, p:14662, tr:[74100,76200,73900], cf:"high", mt:"historical-avg" },
+  { id:5, acc:"6330", nm:"Cleaning", cc:"3499", sup:"Elis Textil Service AB", b:125000, a:100563, p:24437, tr:[123800,126100,124300], cf:"high", mt:"historical-avg" },
+  { id:6, acc:"6330", nm:"Cleaning", cc:"3499", sup:"Carepa AB", b:75000, a:60338, p:14662, tr:[73200,76800,74500], cf:"medium", mt:"straight-line" },
+  { id:7, acc:"6335", nm:"Repairs & maint.", cc:"3499", sup:"FH support AB", b:75000, a:60338, p:14662, tr:[71400,78200,74900], cf:"medium", mt:"historical-avg" },
+  { id:8, acc:"6345", nm:"Other property costs", cc:"3499", sup:"FHS AB", b:240000, a:193080, p:46920, tr:[238100,242300,239700], cf:"high", mt:"straight-line" },
+  { id:9, acc:"6345", nm:"Other property costs", cc:"3499", sup:"Avarn Security", b:120000, a:96540, p:23460, tr:[118500,121200,119800], cf:"high", mt:"straight-line" },
+  { id:10, acc:"6560", nm:"Vehicle leases", cc:"3499", sup:"Jungheinrich AB", b:100000, a:80450, p:19550, tr:[98700,101300,99200], cf:"high", mt:"straight-line" },
+  { id:11, acc:"6540", nm:"Other G&A", cc:"8990", sup:"Various", b:113269, a:0, p:113269, tr:[82100,84200,80700], cf:"medium", mt:"budget-based" },
+  { id:12, acc:"6832", nm:"Payroll service", cc:"8499", sup:"Flex Applications", b:85000, a:0, p:85000, tr:[83200,87100,84600], cf:"low", mt:"budget-based" },
+  { id:13, acc:"6827", nm:"Audit fees", cc:"8599", sup:"PwC", b:77500, a:0, p:77500, tr:[75000,75000,80000], cf:"medium", mt:"budget-based" },
+  { id:14, acc:"6351", nm:"Rubbish removal", cc:"3499", sup:"Stena Recycling AB", b:70000, a:56315, p:13685, tr:[69200,71100,69800], cf:"high", mt:"historical-avg" },
+  { id:15, acc:"6400", nm:"Insurances", cc:"3499", sup:"FidesSecur", b:52966, a:42611, p:10355, tr:[52966,52966,52966], cf:"high", mt:"straight-line" },
+  { id:16, acc:"6824", nm:"Other consulting", cc:"5999", sup:"Chris Shields", b:30000, a:0, p:30000, tr:[0,15000,15000], cf:"low", mt:"budget-based" },
+  { id:17, acc:"6825", nm:"Legal fees", cc:"8699", sup:"Legal Fees", b:25000, a:0, p:25000, tr:[24200,24800,25100], cf:"high", mt:"historical-avg" },
+  { id:18, acc:"6845", nm:"Minor tools", cc:"3499", sup:"Other supplier(s)", b:100000, a:80450, p:19550, tr:[95400,103200,98100], cf:"medium", mt:"historical-avg" },
+];
+
+// ─── Accruals Output ────────────────────────────────────────────────────────
+const AccrualsOutput = ({ onBack }) => {
+  const [exp, setExp] = useState(null);
+  const [statuses, setStatuses] = useState({});
+  const gs = (id) => statuses[id] || "pending";
+  const ss = (id, s) => setStatuses(p => ({...p,[id]:s}));
+
+  const fl = aLines;
+  const totP = fl.reduce((s,l)=>s+l.p,0);
+  const nFlag = fl.filter(l=>l.cf==="low").length;
+  const nApp = Object.values(statuses).filter(s=>s==="approved").length;
+  const nRej = Object.values(statuses).filter(s=>s==="rejected").length;
+
+  return (
+    <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div style={{ padding:16, borderBottom:`1px solid ${t.border}`, flexShrink:0 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+          <Btn variant="ghost" onClick={onBack} style={{ padding:6 }}>{ic.arwL({ size:16 })}</Btn>
+          <div>
+            <h1 style={{ fontSize:16, fontWeight:600, margin:0 }}>Jan 2026 Accrual Journal</h1>
+            <p style={{ fontSize:12, color:t.fgMuted, margin:0 }}>HelloFresh Nordic · Sweden (Entity 029 + 055)</p>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
+          {[
+            { label:"Lines", value:fl.length },
+            { label:"Proposed total", value:`${fmt(totP)} SEK`, mono:true },
+            { label:"Flagged", value:nFlag, warn:nFlag>0 },
+            { label:"Approved", value:`${nApp}/${fl.length}` },
+            { label:"Rejected", value:nRej, err:nRej>0 },
+          ].map(s=>(
+            <div key={s.label} style={{ padding:"8px 14px", background:t.muted, borderRadius:t.r, minWidth:80 }}>
+              <div style={{ fontSize:11, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:2 }}>{s.label}</div>
+              <div style={{ fontSize:15, fontWeight:600, color:s.warn?t.warning:s.err?t.error:t.fg, ...(s.mono?{fontFamily:ff.mono}:{}) }}>{s.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ flex:1, overflow:"auto", background:t.card }}>
+        <table style={{ width:"100%", borderCollapse:"collapse" }}>
+          <thead style={{ position:"sticky", top:0, zIndex:1 }}>
+            <tr style={{ background:`${t.muted}cc` }}>
+              {["","Account","CC","Supplier","Budget","Actuals","Proposed","Trend","Conf.",""].map((h,i)=><th key={i} style={{ textAlign:[4,5,6].includes(i)?"right":"left", fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", padding:"10px 12px", borderBottom:`1px solid ${t.border}`, whiteSpace:"nowrap" }}>{h}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {fl.map(line => {
+              const status=gs(line.id), isE=exp===line.id;
+              return <React.Fragment key={line.id}>
+                <tr onClick={()=>setExp(isE?null:line.id)} style={{ cursor:"pointer", background:status==="approved"?"#f0fdf480":status==="rejected"?"#fef2f280":isE?t.muted:t.card, borderBottom:`1px solid ${t.borderLight}` }}>
+                  <td style={{ padding:"10px 12px", width:20 }}><div style={{ transform:isE?"rotate(90deg)":"none", transition:"transform 0.15s", display:"flex" }}>{ic.chevR({ size:12, color:t.fgFaint })}</div></td>
+                  <td style={{ padding:"10px 12px" }}><div style={{ fontFamily:ff.mono, fontSize:13, fontWeight:600, color:t.fg }}>{line.acc}</div><div style={{ fontSize:11, color:t.fgMuted }}>{line.nm}</div></td>
+                  <td style={{ padding:"10px 12px", fontFamily:ff.mono, fontSize:12, color:t.fgMuted }}>{line.cc}</td>
+                  <td style={{ padding:"10px 12px", fontSize:13, maxWidth:170, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{line.sup}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", fontFamily:ff.mono, fontSize:13, color:t.fgMuted }}>{fmt(line.b)}</td>
+                  <td style={{ padding:"10px 12px", textAlign:"right" }}><div style={{ fontFamily:ff.mono, fontSize:13 }}>{fmt(line.a)}</div><TinyBar value={line.a} max={line.b}/></td>
+                  <td style={{ padding:"10px 12px", textAlign:"right", fontFamily:ff.mono, fontSize:13, fontWeight:600, color:t.info }}>{fmt(line.p)}</td>
+                  <td style={{ padding:"10px 12px" }}><Spark data={line.tr} proposed={line.a+line.p}/></td>
+                  <td style={{ padding:"10px 12px", textAlign:"center" }}><Badge variant={line.cf==="high"?"success":line.cf==="medium"?"warning":"error"}>{line.cf==="high"?"High":line.cf==="medium"?"Med":"Low"}</Badge></td>
+                  <td style={{ padding:"10px 6px", textAlign:"right" }} onClick={e=>e.stopPropagation()}>
+                    {status==="pending"?<div style={{ display:"flex", gap:4, justifyContent:"flex-end" }}>
+                      <button onClick={()=>ss(line.id,"approved")} style={{ width:28, height:28, borderRadius:6, border:`1px solid ${t.border}`, background:t.card, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>{ic.check({ size:14, color:t.success })}</button>
+                      <button onClick={()=>ss(line.id,"rejected")} style={{ width:28, height:28, borderRadius:6, border:`1px solid ${t.border}`, background:t.card, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>{ic.xCirc({ size:14, color:t.error })}</button>
+                    </div>:<Badge variant={status==="approved"?"success":"error"}>{status==="approved"?"✓ Approved":"✕ Rejected"}</Badge>}
+                  </td>
+                </tr>
+                {isE && <tr><td colSpan={10} style={{ padding:"0 12px 16px 44px", background:t.muted, borderBottom:`1px solid ${t.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, paddingTop:12 }}>
+                    <Card style={{ padding:12, fontSize:12 }}>
+                      <div style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>Budget vs Actuals</div>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}><span style={{ color:t.fgMuted }}>Budget</span><span style={{ fontFamily:ff.mono, fontWeight:600 }}>{fmt(line.b)}</span></div>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}><span style={{ color:t.fgMuted }}>Posted</span><span style={{ fontFamily:ff.mono }}>{fmt(line.a)}</span></div>
+                      <div style={{ borderTop:`1px solid ${t.border}`, paddingTop:6, display:"flex", justifyContent:"space-between" }}><span style={{ fontWeight:500 }}>Open</span><span style={{ fontFamily:ff.mono, fontWeight:600, color:t.error }}>{fmt(line.b-line.a)}</span></div>
+                    </Card>
+                    <Card style={{ padding:12, fontSize:12 }}>
+                      <div style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>3-Month Trend</div>
+                      {["Oct","Nov","Dec"].map((m,i)=><div key={m} style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}><span style={{ color:t.fgMuted }}>{m}</span><span style={{ fontFamily:ff.mono }}>{fmt(line.tr[i])}</span></div>)}
+                      <div style={{ borderTop:`1px solid ${t.border}`, paddingTop:6, display:"flex", justifyContent:"space-between" }}><span style={{ fontWeight:500 }}>Avg</span><span style={{ fontFamily:ff.mono, fontWeight:600 }}>{fmt(line.tr.reduce((a,b)=>a+b,0)/3)}</span></div>
+                    </Card>
+                    <Card style={{ padding:12, fontSize:12 }}>
+                      <div style={{ fontSize:11, fontWeight:500, color:t.fgFaint, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>Calculation</div>
+                      <div style={{ marginBottom:4 }}><span style={{ color:t.fgMuted }}>Method: </span>{line.mt}</div>
+                      <div style={{ marginBottom:4 }}><span style={{ color:t.fgMuted }}>Proposed: </span><span style={{ fontFamily:ff.mono, fontWeight:600 }}>{fmt(line.p)} SEK</span></div>
+                    </Card>
+                  </div>
+                </td></tr>}
+              </React.Fragment>;
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ background:t.muted, borderTop:`1px solid ${t.border}`, padding:"8px 16px", fontSize:11, color:t.fgFaint, display:"flex", justifyContent:"space-between", flexShrink:0 }}>
+        <span>Worker: <strong style={{ color:t.fgMuted }}>Month-End Accruals</strong> · Run: MILO-WKR-20260212-0847</span>
+        <span style={{ color:t.fgMuted, cursor:"pointer" }}>Audit log →</span>
+      </div>
+    </div>
+  );
+};
+
+// ─── App ────────────────────────────────────────────────────────────────────
+export default function MiloPrototype() {
+  const [page, setPage] = useState("workers");
+  const [workerCreated, setWorkerCreated] = useState(false);
+  const sk = page==="accruals-output"?"inbox":page==="worker-detail"?"workers":page==="create-worker"?"workers":page;
+  return (
+    <div style={{ display:"flex", height:"100vh", overflow:"hidden", fontFamily:ff.sans, color:t.fg, background:t.bg }}>
+      <Sidebar activePage={sk} onNavigate={setPage}/>
+      {page==="workers"&&<WorkersPage onNavigate={setPage} hasWorker={workerCreated}/>}
+      {page==="create-worker"&&<CreateWorkerPage onNavigate={setPage} onWorkerCreated={()=>setWorkerCreated(true)}/>}
+      {page==="worker-detail"&&<WorkerDetailPage onNavigate={setPage}/>}
+      {page==="inbox"&&<InboxPage onNavigate={setPage}/>}
+      {page==="accruals-output"&&<AccrualsOutput onBack={()=>setPage("worker-detail")}/>}
+      {page==="activity"&&<div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", color:t.fgFaint }}>Activity log</div>}
+      {page==="settings"&&<div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", color:t.fgFaint }}>Settings</div>}
+    </div>
+  );
+}
